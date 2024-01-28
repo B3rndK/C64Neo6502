@@ -25,5 +25,6 @@ You can change the speed of the RP2040 by defining the macro "_TURBO". This will
 # Output
 There is no DVI library used. The output is simply a check if something is written to the C-64's video ram area and the current video ram is then sent to the console after doing a rudimentary character conversion. Idea is to later output the display via TCP/IP towards a WebGL browser window, but you can also take over the existing code to implement DVI output.
 
-  
+# Input
+No keyboard input so far. Maybe I will implement it to at least run Commodore Basic programs but, as stated earlier, feel free to add it yourself with the usblib.
 
