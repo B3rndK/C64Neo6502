@@ -10,7 +10,7 @@ Due to copyright reasons, I cannot include the C-64 bios files "basic", "kernal"
   <li>basic.hxx</li>
   <li>kernal.hxx</li>
   <li>chargen.hxx</li>
-</ul>
+</ul><br>
 replacing the included but invalid files.
 
 
