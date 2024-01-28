@@ -1,6 +1,8 @@
 # C64Neo6502
 C64 emulation using the Neo6502 development board
 
+## This is work in progress. Do not try to compile "as is" at the moment.
+
 ## What it is used for
 I coded this because the Neo6502 seemed to be a very good piece of hardware allowing to get known to microprocessor bus interfacing on hardware level but by using a common high level programming language. I see this as being in the middle of either software based emulation and pure hardware emulation using FPGAs. By looking at the code you can see how to initiate the RESET sequence of the 65C02, how to interface with RAM / ROM and how to do mapped IO and create hardware interrupts. It also enables to debug the internals of the C-64 to check, e.g. how the Kernal detects PAL or NTSC machines etc. 
 
