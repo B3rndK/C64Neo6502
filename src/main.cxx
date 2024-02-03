@@ -40,7 +40,10 @@ int main() {
   adc_init();
   stdio_init_all();
   sleep_ms(WAIT_FOR_USB_INIT_TIMEOUT_IN_MS); // We need some time for USB to initialize.
-  //reset_usb_boot(0,0);  
+  
+  /* In case of problems, RESET USB and exit in order to make ttyACM1 reappear. 
+  reset_usb_boot(0,0);  return 0; */
+
 #ifdef _TURBO
   set_sys_clock_khz(TURBO_65C02, true); 
 #else
@@ -48,13 +51,13 @@ int main() {
 #endif
   Logging *pLog=new Logging(new AnsiTerminal(), All);
   pLog->Clear();
-  pLog->LogTitle({"*** Welcome to the wonderful world of 8-bit MOS Technology ***\n"});
+  pLog->LogTitle({"*** Welcome to the wonderful world of 8-bit MOS technology ***\n"});
   Computer *pComputer = new Computer(pLog);
   
   int ret=pComputer->Run();
   delete pLog;
   delete pComputer;
+  // Give some time to flush logging...
   sleep_ms(1000);
-  // reset_usb_boot(0,0);  
   return 0;
 } 
