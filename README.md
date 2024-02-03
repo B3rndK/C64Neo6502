@@ -2,10 +2,10 @@
 C64 emulation using the Neo6502 development board
 
 ## What it is used for
-I coded this because the Neo6502 seemed to be a very good piece of hardware allowing to get known to microprocessor bus interfacing on hardware level but by using a common high level programming language. I see this as being in the middle of either software based emulation and pure hardware emulation using FPGAs. By looking at the code you can see how to initiate the RESET sequence of the 65C02, how to interface with RAM / ROM and how to do mapped IO and create hardware interrupts. It also enables to debug the internals of the C-64 to check, e.g. how the Kernal detects PAL or NTSC machines etc. 
+I coded this because the Neo6502 seems to be a very good piece of hardware to refresh old memories and to deal with microprocessor bus interfacing on hardware level by using a common high level programming language instead of e.g. VHDL or VERILOG. I see this as being in the middle of purely software based emulation and pure hardware simulation by using FPGAs. By looking at the code and debugging you can see how to initiate the RESET sequence of the 65C02, how to interface with RAM / ROM and how to do mapped IO and create hardware interrupts. It also enables to debug the internals of the C-64 to check, e.g. how the Kernal detects PAL or NTSC machines etc. To cut a long story short: It should be fun!
 
 ## What it is not
-It is not an emulation which you can use to play any games (yet). If it was of any use to bring it further being a full emulation, I would be happy.
+It is not an emulation which you can use to play any games (yet). If it was of any use to bring it further being a full emulation, use it. 
 
 ## Prerequisits
 I am following the wireing standard from Vaselin Sladkov, so in order to have the RP2040 create real interrupts please connect pin 10 of UEXT connector (GPIO 25) to pin 24 of 6502 bus connector (IRQ) using an external wire. Furthermore we will need to create a real RESET signal, so please connect pin 9 of the UEXT connector to pin 40 (RESET) as well as pin 8 of the UEXT connector to pin 26 (NMI) of the 6502 bus.
