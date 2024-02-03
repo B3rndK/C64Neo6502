@@ -25,13 +25,13 @@ replacing the included but invalid files.
 ## Configuration
 You can change the speed of the RP2040 by defining the macro "_TURBO". This will overclock your RP2040 from 133Mhz to 252MHz giving an effective C-64 speed of 2.04Mhz.
 
-# Output
+## Output
 There is no DVI library used (yet). The output is simply a check if something is written to the C-64's video ram area and the current video ram is then sent to the console after doing a rudimentary character conversion. Idea is to later output the display via TCP/IP towards a WebGL browser window, but you can also take over the existing code to implement DVI output.
 
-# Input
+## Input
 No keyboard input so far. Maybe I will implement it to at least run Commodore Basic programs but, as stated earlier, feel free to add it yourself with the usblib.
 
-# WIP
+## WIP
 This is work in progress and is set up for fun. I will continue to improve the emulation by adding keyboard support next, then DVI support.
 
 
