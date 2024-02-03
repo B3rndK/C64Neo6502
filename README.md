@@ -11,7 +11,7 @@ It is not an emulation which you can use to play any games (yet). If it was of a
 I am following the wireing standard from Vaselin Sladkov, so in order to have the RP2040 create real interrupts please connect pin 10 of UEXT connector (GPIO 25) to pin 24 of 6502 bus connector (IRQ) using an external wire. Furthermore we will need to create a real RESET signal, so please connect pin 9 of the UEXT connector to pin 40 (RESET) as well as pin 8 of the UEXT connector to pin 26 (NMI) of the 6502 bus.
 
 ### PICO-SDK (RP2040)
-You need to install the PICO-SDK [Pico-SDK](https://github.com/raspberrypi/pico-sdk) and set the environment variable `PICO_SDK_PATH`. Furthermore I am using the Open On Chip Debugger (OpenOCD) using a [RP Debug Probe[(https://www.raspberrypi.com/products/debug-probe/).
+You need to install the PICO-SDK [Pico-SDK](https://github.com/raspberrypi/pico-sdk) and set the environment variable `PICO_SDK_PATH`. Furthermore I am using the Open On Chip Debugger (OpenOCD) using a [RP Debug Probe](https://www.raspberrypi.com/products/debug-probe/).
 
 ### Visual Studio Code
 I am using Visual Studio Code and the following plugins:
