@@ -44,9 +44,12 @@ replacing the included but invalid files.
 ### Monitor
 I included a small machine code monitor at $c000 (sys 49152).
 
+## Sound
+There is no sound yet.
+
 ## Output
-DVI output is now implemented for C64 textmode. The design also supports hires and even multicolour (fli) support. 
-It is using a "quirk mode" of 340x240 and may not run on every monitor. You can enforce using a 640x480 mode by changing a single line of code.
+DVI output is now implemented for C64 textmode. The design also supports hires and even multicolour (fli) support. No support for sprites or bitscrolling yet.
+The resolution used is a "quirk mode" of 340x240 and may not run on every display. You can enforce using a 640x480 mode by changing a single line of code in case you prefer more compatible timing.
 
 ## Input
 Keyboard input is currently handled by directly attaching a usb keyboard. There is currently no USB-hub support.
@@ -55,9 +58,8 @@ Keyboard input is currently handled by directly attaching a usb keyboard. There 
 This is work in progress and is set up for fun. I will continue to improve the emulation by adding hires-mode (320x200) and better keyboard support via CIA#1 next.
 
 ## How does it look?
-This is what will come out. I set a breakpoint to show the setup and then pressed F5 to continue running. The '@' signs occur because I fill the C-64's memory with 0 on startup:
+This is how it currently looks like:
 
-https://github.com/B3rndK/C64Neo6502/assets/47975140/7b570d02-d5ab-46fd-90f3-c7ce108a266b
 
 
 
