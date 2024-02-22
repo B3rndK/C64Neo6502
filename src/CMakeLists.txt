@@ -3,6 +3,7 @@ cmake_minimum_required(VERSION 3.13)
 # initialize the SDK based on PICO_SDK_PATH
 # note: this must happen before project()
 set(PICO_SDK_FETCH_FROM_GIT on)
+set(PICO_BOARD pico)
 include(pico_sdk_import.cmake)
 
 project(my_project C CXX ASM)
@@ -45,33 +46,38 @@ FetchContent_MakeAvailable(PicoDVI)
 add_subdirectory(${picodvi_SOURCE_DIR}/software/libdvi ${picodvi_BINARY_DIR})
 
 include_directories(
-    include
-    common/include
-    ${picodvi_SOURCE_DIR}/software/libdvi
+  ${CMAKE_CURRENT_LIST_DIR}
+
+  #  include
+  #  common/include
+  #  ${picodvi_SOURCE_DIR}/software/libdvi
+  #  ${picodvi_SOURCE_DIR}/software/libdvi    
+  #  ${tinyusb_SOURCE_DIR}
+  #  ${tinyusb_SOURCE_DIR}/src/hw/rp2040
 )
 
 # rest of your project 
 
 add_executable(computer
-    main.cxx
-    logging.cxx
-    rp65c02.cxx 
-    vic6569.cxx
-    cia6526.cxx
-    rpPetra.cxx
-    computer.cxx
-    
+  videoOut.cxx
+  main.cxx
+  logging.cxx
+  rp65c02.cxx 
+  vic6569.cxx
+  cia6526.cxx
+  rpPetra.cxx
+  computer.cxx
 )
 
 # Comment in for release version 
-add_compile_definitions(_DEBUG _NO_TURBO) 
+add_compile_definitions(_RELEASE _MONITOR_CARTRIDGE)
 
 # Add pico_stdlib library which aggregates commonly used features
-target_link_libraries(computer pico_stdlib hardware_adc hardware_dma hardware_pio pico_time pico_multicore libdvi)
+target_link_libraries(computer pico_stdlib hardware_adc hardware_dma hardware_pio pico_time pico_multicore libdvi tinyusb_host tinyusb_board tinyusb_device)
 
 # enable usb output, disable uart output
-pico_enable_stdio_usb(computer 1)
-pico_enable_stdio_uart(computer 0)
+pico_enable_stdio_usb(computer 0)
+pico_enable_stdio_uart(computer 1)
 
 
 # create map/bin/hex/uf2 file in addition to ELF.

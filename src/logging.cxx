@@ -103,7 +103,7 @@ Logging::Logging(TerminalBase *pTerminal, LogLevel logLevel=All)
 
 Logging::~Logging()
 {
-  delete m_pTerminal;
+   // delete m_pTerminal;
 }
 void Logging::LogDebug(std::initializer_list<const char *> logOutput){};
 void Logging::LogInfo(std::initializer_list<const char *> logOutput){};

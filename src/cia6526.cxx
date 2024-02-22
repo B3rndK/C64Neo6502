@@ -1,9 +1,12 @@
 #include <stdio.h>
 #include <hardware/gpio.h>
+#include <dvi.h>
+#include <dvi_serialiser.h>
 #include "logging.hxx"
 #include "rp65c02.hxx"
 #include "cia6526.hxx"
 #include "vic6569.hxx"
+#include "videoOut.hxx"
 #include "rpPetra.hxx"
 
 

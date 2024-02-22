@@ -2,6 +2,7 @@
 #define _COMPUTER_HXX
 
 class RpPetra;
+extern RpPetra *_pGlue;
 
 class Computer {
   
