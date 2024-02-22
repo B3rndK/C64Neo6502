@@ -19,45 +19,47 @@
 #include <stdio.h>
 #include <hardware/adc.h>
 #include <pico/stdlib.h>
+#include <pico/multicore.h>
 #include <hardware/regs/resets.h>
 #include <hardware/resets.h>
 #include <hardware/vreg.h>
 #include <pico/bootrom.h>
+#include <memory.h>
+#include <dvi.h>
+#include <dvi_serialiser.h>
+#include <bsp/board_api.h>
+#include <tusb.h>
 #include "rp65c02.hxx"
 #include "cia6526.hxx"
 #include "vic6569.hxx"
 #include "terminalBase.hxx"
 #include "ansiTerminal.hxx"
 #include "logging.hxx"
+#include "videoOut.hxx"
 #include "rpPetra.hxx"
 #include "computer.hxx"
+#include "hardware/structs/bus_ctrl.h"
+#include "videoOut.hxx"
 
 #define WAIT_FOR_USB_INIT_TIMEOUT_IN_MS 2000
-#define TURBO_65C02 252000 // 2,04 Mhz 65C02
-#define REGULAR_65C02 133000 // 1,05 Mhz 65C02
 
 int main() {
-  adc_init();
+   adc_init();    
   stdio_init_all();
-  sleep_ms(WAIT_FOR_USB_INIT_TIMEOUT_IN_MS); // We need some time for USB to initialize.
-  
-  /* In case of problems, RESET USB and exit in order to make ttyACM1 reappear. 
-  reset_usb_boot(0,0);  return 0; */
+  sleep_ms(2000);
+  /* In case of problems, RESET USB and exit in order to make ttyACM1 reappear. */
+  //reset_usb_boot(0,0);  return 0; 
 
-#ifdef _TURBO
-  set_sys_clock_khz(TURBO_65C02, true); 
-#else
-  set_sys_clock_khz(REGULAR_65C02, true); 
-#endif
   Logging *pLog=new Logging(new AnsiTerminal(), All);
   pLog->Clear();
   pLog->LogTitle({"*** Welcome to the wonderful world of 8-bit MOS technology ***\n"});
+
   Computer *pComputer = new Computer(pLog);
-  
   int ret=pComputer->Run();
+  // Dead end...
   delete pLog;
   delete pComputer;
-  // Give some time to flush logging...
   sleep_ms(1000);
-  return 0;
-} 
+  return ret;
+}
+

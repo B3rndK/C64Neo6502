@@ -3,3 +3,5 @@ cmake-*
 .DS_Store
 c64.log
 build
+roms
+

@@ -41,14 +41,13 @@ class RpPetra {
   
   public: 
     Logging *m_pLog;    
-  
-  private:
-    RP65C02 *m_pCPU;
+    VIC6569 *m_pVICII;  
+    u_int8_t *m_pRAM;
     CIA6526 *m_pCIA1;
     CIA6526 *m_pCIA2;
-    VIC6569 *m_pVICII;
-    u_int8_t *m_pRAM;
-    bool m_screenUpdated;
+  private:
+    RP65C02 *m_pCPU;
+    VideoOut *m_pVideoOut;
     void Enable_U5_only() { gpio_put_masked(pioMaskOE_U5_U6_U7, enableU5Only); };  
     void Enable_U6_only() { gpio_put_masked(pioMaskOE_U5_U6_U7, enableU6Only); };  
     void Enable_U7_only() { gpio_put_masked(pioMaskOE_U5_U6_U7, enableU7Only); };  
@@ -60,14 +59,16 @@ class RpPetra {
     inline void ReadCPUSignals(SYSTEMSTATE *pSystemState);
     void DumpScreen();
   public:
-    // Petra's CLK is triggered...
+    bool m_screenUpdated;
+
     void Clk(bool isRisingEdge, SYSTEMSTATE *pSystemState);
     RpPetra(Logging *pLogging, RP65C02 *pCpu);
     void SignalIRQ(bool enable);
-    inline void SignalNMI(bool enable);
+    void SignalNMI(bool enable);
     virtual ~RpPetra();
     void Reset();
     void UpdateScreen();
+        
 };
 
 #endif

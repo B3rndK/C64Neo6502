@@ -1,9 +1,12 @@
 #include <stdio.h>
 #include <hardware/gpio.h>
+#include <dvi.h>
+#include <dvi_serialiser.h>
 #include "logging.hxx"
 #include "rp65c02.hxx"
 #include "cia6526.hxx"
 #include "vic6569.hxx"
+#include "videoOut.hxx"
 #include "rpPetra.hxx"
 
 
@@ -25,8 +28,8 @@ void CIA6526::Clk()
   m_i64Clks++;
   m_registerSet[0x01]=0xff; // No key pressed.
 
-  size_t const BufferSize = 512;
-  char buffer[BufferSize];
+  // size_t const BufferSize = 512;
+  //char buffer[BufferSize];
 
   if (m_registerSetWrite[0x0e] & 0x01) // Start timer set?
   {

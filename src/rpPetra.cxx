@@ -1,13 +1,16 @@
 #include <hardware/gpio.h>
 #include <pico/time.h>
+#include <dvi.h>
+#include <dvi_serialiser.h>
+#include <memory.h>
 #include "logging.hxx"
 #include "rp65c02.hxx"
 #include "cia6526.hxx"
 #include "vic6569.hxx"
+#include "videoOut.hxx"
 #include "rpPetra.hxx"
 #include "computer.hxx"
 #include "monitor.hxx"
-#include "roms/chargen.hxx"
 #include "roms/basic.hxx"
 #include "roms/kernal.hxx"
 
@@ -32,7 +35,7 @@
 
 */
 
-static u_int8_t benchmark[]={0xA9, 0x00, 0xAA, 0xA8, 0xE8, 0xD0, 0xFD,0xC8,0xD0,0xFA,0xAA,0xE8,0x8A,0xC9,0xFF,0xD0,0xF3,0x8D,0x20,0xD0,0x4C,0x04,0xE0};
+// static u_int8_t benchmark[]={0xA9, 0x00, 0xAA, 0xA8, 0xE8, 0xD0, 0xFD,0xC8,0xD0,0xFA,0xAA,0xE8,0x8A,0xC9,0xFF,0xD0,0xF3,0x8D,0x20,0xD0,0x4C,0x04,0xE0};
 
 static char Charset[]={ '@','A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z',
                         '[','#',']','#','#',' ','!','"','#','$','%','&','`','(',')','*','+',',','-','.','/','0','1','2','3','4','5','6','7','8','9',
@@ -45,8 +48,14 @@ RpPetra::RpPetra(Logging *pLogging, RP65C02 *pCPU)
     m_pCIA1 = new CIA6526(pLogging, this);
     m_pCIA2 = new CIA6526(pLogging, this);
     m_pVICII= new VIC6569(pLogging, this);
+    m_pRAM=(u_int8_t *)malloc(65536);
 
-    m_pRAM=(u_int8_t *)calloc(1,65536);
+#ifdef _MONITOR_CARTRIDGE
+
+    memcpy(&m_pRAM[0xc000],mon_c000,4095);
+
+#endif
+    m_pVideoOut=new VideoOut(pLogging, this, m_pVICII->GetFrameBuffer());
     Reset();
 }
 
@@ -71,6 +80,7 @@ void RpPetra::Reset()
   m_pVICII->Reset();  
   m_pCIA1->Reset();  
   m_pCIA2->Reset();  
+  m_pVideoOut->Reset();
   ResetCPU();
 }
 
@@ -122,10 +132,8 @@ void RpPetra::ClockCPU(int counter)
 void RpPetra::Clk(bool isRisingEdge, SYSTEMSTATE *pSystemState)
 {
   int_fast16_t addr;
-  static int_fast16_t lastaddr;
-  static bool lastWasWrite=false;
-  char szBuffer[256];
-  static int64_t start=0;
+  //static char szBuffer[256];
+  // szBuffer[0]=0;
   PHI2(LOW);
   m_pCIA1->Clk();
   m_pCIA2->Clk();
@@ -139,24 +147,25 @@ void RpPetra::Clk(bool isRisingEdge, SYSTEMSTATE *pSystemState)
   if (addr>=0xd000 && addr<=0xd02e) // VIC II
   {
     if (pSystemState->cpuState.readNotWrite) {   // READ access
-      sprintf (szBuffer,"VIC-II read access: %04x\n",addr);
-      WriteDataBus(m_pVICII->ReadRegister(addr-0xd000));
+      //sprintf (szBuffer,"VIC-II read access: %04x\n",addr);
+      WriteDataBus(m_pVICII->m_registerSetRead[addr-0xd000]);
     }
     else {
-      sprintf (szBuffer,"VIC-II write access: %04x,%02x\n",addr,pSystemState->cpuState.d0d7);
+      //sprintf (szBuffer,"VIC-II write access: %04x,%02x\n",addr,pSystemState->cpuState.d0d7);
       m_pVICII->WriteRegister(addr-0xd000,pSystemState->cpuState.d0d7);
+      m_screenUpdated=true;
     }
     //m_pLog->LogInfo({szBuffer});
   }
   else if (addr>=0xdc00 && addr<=0xdcff) // CIA-1
   {   
     if (pSystemState->cpuState.readNotWrite) {   // READ access
-      sprintf (szBuffer,"CIA1 read access: %04x\n",addr);
+      //sprintf (szBuffer,"CIA1 read access: %04x\n",addr);
       // CIA addresses are mirrored every 16 byte until dcff.
       WriteDataBus(m_pCIA1->ReadRegister((addr-0xdc00) % 16));
     }
     else {
-      sprintf (szBuffer,"CIA1 write access: %04x,%02x\n",addr,pSystemState->cpuState.d0d7);
+      //sprintf (szBuffer,"CIA1 write access: %04x,%02x\n",addr,pSystemState->cpuState.d0d7);
       m_pCIA1->WriteRegister((addr-0xdc00) % 16, pSystemState->cpuState.d0d7);
     }
     //m_pLog->LogInfo({szBuffer});
@@ -166,10 +175,10 @@ void RpPetra::Clk(bool isRisingEdge, SYSTEMSTATE *pSystemState)
     if (pSystemState->cpuState.readNotWrite) {   // READ access
         // CIA addresses are mirrored every 16 byte until ddff.
       WriteDataBus(m_pCIA2->ReadRegister((addr-0xdd00) % 16));
-      sprintf (szBuffer,"CIA2 read access: %04x\n",addr);
+      //sprintf (szBuffer,"CIA2 read access: %04x\n",addr);
     }
     else {
-      sprintf (szBuffer,"CIA2 write access: %04x,%02x\n",addr,pSystemState->cpuState.d0d7);
+      //sprintf (szBuffer,"CIA2 write access: %04x,%02x\n",addr,pSystemState->cpuState.d0d7);
       m_pCIA2->WriteRegister((addr-0xdd00) % 16, pSystemState->cpuState.d0d7);
     }
     //m_pLog->LogInfo({szBuffer});
@@ -177,9 +186,8 @@ void RpPetra::Clk(bool isRisingEdge, SYSTEMSTATE *pSystemState)
   else {
     // access to standard RAM or ROM
 
-    if (pSystemState->cpuState.readNotWrite) 
+    if (pSystemState->cpuState.readNotWrite)  // READ 
     {  
-      // READ access
       if (addr>=0xe000)
       {
         // Kernal ROM
@@ -193,12 +201,10 @@ void RpPetra::Clk(bool isRisingEdge, SYSTEMSTATE *pSystemState)
       else 
       {
         // Regular DRAM
-        if (pSystemState->cpuState.readNotWrite) {  
-          WriteDataBus(m_pRAM[addr]);
-        }
+        WriteDataBus(m_pRAM[addr]);
       }
     }
-    else // Write to memory address
+    else // WRITE
     {
       if (addr>=0xa000 && addr<=0xbfff)
       {
@@ -206,18 +212,21 @@ void RpPetra::Clk(bool isRisingEdge, SYSTEMSTATE *pSystemState)
       else if (addr>=0xe000 && addr<=0xffff)
       {
       }
+      else if (addr>=0xd800 && addr<=0xdbe7) // colorram
+      {
+        m_pRAM[addr]=pSystemState->cpuState.d0d7;
+        m_screenUpdated=true;        
+      }
       else
       { // Write to RAM
         m_pRAM[addr]=pSystemState->cpuState.d0d7;
+        if (addr>=0x0400 && addr<=0x07AC)
+        {
+          m_screenUpdated=true;
+        }
       }
+      //m_pLog->LogInfo({szBuffer});
     }
-    
-    if (lastWasWrite && (lastaddr>=0x0400 && lastaddr<=0x07AC) && (addr<0x0400 || addr>0x07AC)) // Last access to video ram
-    {
-        m_screenUpdated=true;
-    }
-    lastaddr=addr;
-    lastWasWrite=!pSystemState->cpuState.readNotWrite;
   }
 }
 
