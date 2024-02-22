@@ -61,5 +61,9 @@ This is work in progress and is set up for fun. I will continue to improve the e
 This is how it currently looks like:
 
 
+https://github.com/B3rndK/C64Neo6502/assets/47975140/b9c2fc19-d006-4a64-adb6-9a790b7ab940
+
+
+
 
 
