@@ -13,6 +13,12 @@ I am following the wireing standard from Vaselin Sladkov, so in order to have th
 ### PICO-SDK (RP2040)
 You need to install the PICO-SDK [Pico-SDK](https://github.com/raspberrypi/pico-sdk) and set the environment variable `PICO_SDK_PATH`. Furthermore I am using the Open On Chip Debugger (OpenOCD) using a [RP Debug Probe](https://www.raspberrypi.com/products/debug-probe/).
 
+### tinyusb
+I am using [tinyUSB](https://github.com/hathach/tinyusb) as well.
+
+### PicoDVI
+I make use of [PicoDVI](https://github.com/Wren6991/PicoDVI).
+
 ### Visual Studio Code
 I am using Visual Studio Code and the following plugins:
 
