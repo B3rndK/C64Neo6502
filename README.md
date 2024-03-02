@@ -78,6 +78,10 @@ https://github.com/B3rndK/C64Neo6502/assets/47975140/b9c2fc19-d006-4a64-adb6-9a7
 
 https://github.com/B3rndK/C64Neo6502/assets/47975140/3b8debd9-2552-4bcd-9083-cc5b92138464
 
+* And the final result after some hours of computation...
+  
+![result](https://github.com/B3rndK/C64Neo6502/assets/47975140/7d0ea53a-ef3a-47bd-9427-aa0bf179def9)
+
 
 
 
