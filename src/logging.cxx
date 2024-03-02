@@ -1,3 +1,8 @@
+/**
+ * Written by Bernd Krekeler, Herne, Germany
+ * 
+*/
+
 #include <stdarg.h>
 #include <stdio.h>
 #include <iostream>

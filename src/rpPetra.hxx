@@ -48,6 +48,7 @@ class RpPetra {
   private:
     RP65C02 *m_pCPU;
     VideoOut *m_pVideoOut;
+    uint8_t m_cpuAddr;
     void Enable_U5_only() { gpio_put_masked(pioMaskOE_U5_U6_U7, enableU5Only); };  
     void Enable_U6_only() { gpio_put_masked(pioMaskOE_U5_U6_U7, enableU6Only); };  
     void Enable_U7_only() { gpio_put_masked(pioMaskOE_U5_U6_U7, enableU7Only); };  
@@ -57,7 +58,13 @@ class RpPetra {
     void PHI2(bool isRisingEdge) { gpio_put(CLK,isRisingEdge);}
     inline void WriteDataBus(uint8_t byte);
     inline void ReadCPUSignals(SYSTEMSTATE *pSystemState);
+    inline bool IsIOVisible();
+    inline bool IsBasicRomVisible();
+    inline bool IsKernalRomVisible();
+    inline bool IsCharRomVisible();
+
     void DumpScreen();
+    
   public:
     bool m_screenUpdated;
 

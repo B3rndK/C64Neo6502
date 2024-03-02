@@ -1,3 +1,8 @@
+/**
+ * Written by Bernd Krekeler, Herne, Germany
+ * 
+*/
+
 #include <stdio.h>
 #include <hardware/gpio.h>
 #include <dvi.h>

@@ -1,3 +1,8 @@
+ /**
+ * Written by Bernd Krekeler, Herne, Germany
+ * 
+*/
+
 #include <hardware/gpio.h>
 #include <pico/time.h>
 #include <dvi.h>
@@ -13,7 +18,11 @@
 #include "monitor.hxx"
 #include "roms/basic.hxx"
 #include "roms/kernal.hxx"
+#include "roms/simons_basic.hxx"
+#include "roms/apfel_0801.hxx"
 
+extern uint8_t chargen_rom[];
+extern uint8_t simons_basic[];
 /* 1:19 at 1,06Mhz , 0:41,51 at 2,04 Mhz (252000kHz), 1:27,85 at 0,985 Mhz, C64 Original: 1:30,51
 
   .org 0xe000
@@ -48,13 +57,22 @@ RpPetra::RpPetra(Logging *pLogging, RP65C02 *pCPU)
     m_pCIA1 = new CIA6526(pLogging, this);
     m_pCIA2 = new CIA6526(pLogging, this);
     m_pVICII= new VIC6569(pLogging, this);
-    m_pRAM=(u_int8_t *)malloc(65536);
+    m_pRAM=(u_int8_t *)calloc(65536,sizeof(u_int8_t));
+    m_pRAM[1]=55;
 
 #ifdef _MONITOR_CARTRIDGE
-
-    memcpy(&m_pRAM[0xc000],mon_c000,4095);
-
+    memcpy(&m_pRAM[0xc000],mon_c000,sizeof(mon_c000));
 #endif
+
+#ifdef _SIMONS_BASIC
+    memcpy(&m_pRAM[0x8000],simons_basic,sizeof(simons_basic));
+    // Prevent autostart by changing 'CBM80' => 'CBM81'.
+    // Needs to be repoked back to 48 by a poke 32776,48 and then sys64738 to start the module
+    // After Simon's basic is started, enter "old" to recover a little basic program.
+    m_pRAM[0x8008]++;
+    memcpy(&m_pRAM[0x0801],apfel_0801,sizeof(apfel_0801));
+#endif 
+
     m_pVideoOut=new VideoOut(pLogging, this, m_pVICII->GetFrameBuffer());
     Reset();
 }
@@ -127,6 +145,34 @@ void RpPetra::ClockCPU(int counter)
   }
 }
 
+/** Part of the PLA... */
+bool RpPetra::IsIOVisible()
+{
+  static bool table[8]{false,false,false,false,false,true,true,true};
+  return(table[m_cpuAddr]);
+}
+
+/** Part of the PLA... */
+bool RpPetra::IsBasicRomVisible()
+{
+  static bool table[8]{false,false,false,true,false,false,false,true};
+  return(table[m_cpuAddr]);
+}
+
+/** Part of the PLA... */
+bool RpPetra::IsKernalRomVisible()
+{
+  static bool table[8]{false,false,true,true,false,false,true,true};
+  return(table[m_cpuAddr]);
+}
+
+bool RpPetra::IsCharRomVisible()
+{
+  static bool table[8]{false,true,true,true,false,false,false,false};
+  return(table[m_cpuAddr]);
+}
+
+
 // In this design we use Petra's CLK == 65C02 PHI2. We may later decide
 // to use some kind of interleave factor x.
 void RpPetra::Clk(bool isRisingEdge, SYSTEMSTATE *pSystemState)
@@ -143,89 +189,135 @@ void RpPetra::Clk(bool isRisingEdge, SYSTEMSTATE *pSystemState)
   PHI2(HIGH);
   ReadCPUSignals(pSystemState);      
   addr=pSystemState->cpuState.a0a15;
+  m_cpuAddr=m_pRAM[1] & 0x07;
+  bool handled=false;
 
-  if (addr>=0xd000 && addr<=0xd02e) // VIC II
+  if ((addr>=0x0000 && addr<=0x9fff) || (addr>=0xc000 && addr<=0xcfff))
   {
-    if (pSystemState->cpuState.readNotWrite) {   // READ access
-      //sprintf (szBuffer,"VIC-II read access: %04x\n",addr);
-      WriteDataBus(m_pVICII->m_registerSetRead[addr-0xd000]);
-    }
-    else {
-      //sprintf (szBuffer,"VIC-II write access: %04x,%02x\n",addr,pSystemState->cpuState.d0d7);
-      m_pVICII->WriteRegister(addr-0xd000,pSystemState->cpuState.d0d7);
-      m_screenUpdated=true;
-    }
-    //m_pLog->LogInfo({szBuffer});
+      handled=true;
+      if (pSystemState->cpuState.readNotWrite) {   // READ access
+         WriteDataBus(m_pRAM[addr]);
+      }
+      else {
+        m_pRAM[addr]=pSystemState->cpuState.d0d7;
+      }
   }
-  else if (addr>=0xdc00 && addr<=0xdcff) // CIA-1
-  {   
-    if (pSystemState->cpuState.readNotWrite) {   // READ access
-      //sprintf (szBuffer,"CIA1 read access: %04x\n",addr);
-      // CIA addresses are mirrored every 16 byte until dcff.
-      WriteDataBus(m_pCIA1->ReadRegister((addr-0xdc00) % 16));
-    }
-    else {
-      //sprintf (szBuffer,"CIA1 write access: %04x,%02x\n",addr,pSystemState->cpuState.d0d7);
-      m_pCIA1->WriteRegister((addr-0xdc00) % 16, pSystemState->cpuState.d0d7);
-    }
-    //m_pLog->LogInfo({szBuffer});
-  }
-  else if (addr>=0xdd00 && addr<=0xddff) // CIA-2
+  else if (IsIOVisible())
   {
-    if (pSystemState->cpuState.readNotWrite) {   // READ access
-        // CIA addresses are mirrored every 16 byte until ddff.
-      WriteDataBus(m_pCIA2->ReadRegister((addr-0xdd00) % 16));
-      //sprintf (szBuffer,"CIA2 read access: %04x\n",addr);
-    }
-    else {
-      //sprintf (szBuffer,"CIA2 write access: %04x,%02x\n",addr,pSystemState->cpuState.d0d7);
-      m_pCIA2->WriteRegister((addr-0xdd00) % 16, pSystemState->cpuState.d0d7);
-    }
-    //m_pLog->LogInfo({szBuffer});
-  }
-  else {
-    // access to standard RAM or ROM
-
-    if (pSystemState->cpuState.readNotWrite)  // READ 
-    {  
-      if (addr>=0xe000)
-      {
-        // Kernal ROM
-        WriteDataBus(kernal_rom[addr-0xe000]);
-      }
-      else if (addr>=0xa000 && addr<=0xbfff)
-      {
-        // Basic ROM 
-        WriteDataBus(basic_rom[addr-0xa000]);
-      }
-      else 
-      {
-        // Regular DRAM
-        WriteDataBus(m_pRAM[addr]);
-      }
-    }
-    else // WRITE
+    if (addr>=0xd000 && addr<=0xd02e && IsIOVisible()) // VIC II
     {
-      if (addr>=0xa000 && addr<=0xbfff)
-      {
+      handled=true;
+      if (pSystemState->cpuState.readNotWrite) {   // READ access
+        //sprintf (szBuffer,"VIC-II read access: %04x\n",addr);
+        WriteDataBus(m_pVICII->m_registerSetRead[addr-0xd000]);
       }
-      else if (addr>=0xe000 && addr<=0xffff)
-      {
-      }
-      else if (addr>=0xd800 && addr<=0xdbe7) // colorram
-      {
-        m_pRAM[addr]=pSystemState->cpuState.d0d7;
-        m_screenUpdated=true;        
-      }
-      else
-      { // Write to RAM
-        m_pRAM[addr]=pSystemState->cpuState.d0d7;
-        if (addr>=0x0400 && addr<=0x07AC)
-        {
-          m_screenUpdated=true;
-        }
+      else {
+        //sprintf (szBuffer,"VIC-II write access: %04x,%02x\n",addr,pSystemState->cpuState.d0d7);
+        m_pVICII->WriteRegister(addr-0xd000,pSystemState->cpuState.d0d7);
+        m_screenUpdated=true;
       }
       //m_pLog->LogInfo({szBuffer});
+    }
+    else if (addr>=0xdc00 && addr<=0xdcff && IsIOVisible()) // CIA-1
+    {   
+      handled=true;
+      if (pSystemState->cpuState.readNotWrite) {   // READ access
+        //sprintf (szBuffer,"CIA1 read access: %04x\n",addr);
+        // CIA addresses are mirrored every 16 byte until dcff.
+        WriteDataBus(m_pCIA1->ReadRegister((addr-0xdc00) % 16));
+      }
+      else {
+        //sprintf (szBuffer,"CIA1 write access: %04x,%02x\n",addr,pSystemState->cpuState.d0d7);
+        m_pCIA1->WriteRegister((addr-0xdc00) % 16, pSystemState->cpuState.d0d7);
+      }
+      //m_pLog->LogInfo({szBuffer});
+    }
+    else if (addr>=0xdd00 && addr<=0xddff && IsIOVisible()) // CIA-2
+    {
+      handled=true;
+      if (pSystemState->cpuState.readNotWrite) {   // READ access
+          // CIA addresses are mirrored every 16 byte until ddff.
+        WriteDataBus(m_pCIA2->ReadRegister((addr-0xdd00) % 16));
+        //sprintf (szBuffer,"CIA2 read access: %04x\n",addr);
+      }
+      else {
+        //sprintf (szBuffer,"CIA2 write access: %04x,%02x\n",addr,pSystemState->cpuState.d0d7);
+        m_pCIA2->WriteRegister((addr-0xdd00) % 16, pSystemState->cpuState.d0d7);
+      }
+      //m_pLog->LogInfo({szBuffer});
+    }
+  }
+  if (!handled)
+  {
+    if (addr>=0xd000 && addr<=0xdfff)
+    {
+        if (pSystemState->cpuState.readNotWrite)  // READ 
+        {
+          if (IsCharRomVisible())                  
+          {
+            // Character ROM
+            WriteDataBus(chargen_rom[addr-0xd000]);
+          }
+          else
+          {
+            WriteDataBus(m_pRAM[addr]);
+          }
+        }
+        else
+        {
+          // Non IO access, so always write to RAM
+          m_pRAM[addr]=pSystemState->cpuState.d0d7;
+        }
+    }
+    else if (addr>=0xa000 && addr<=0xbfff)  // maybe basic ROM access or ram
+    {
+        if (pSystemState->cpuState.readNotWrite)  // READ 
+        {
+          if (IsBasicRomVisible())                  
+          {
+            // Character ROM
+            WriteDataBus(basic_rom[addr-0xa000]);
+          }
+          else
+          {
+            WriteDataBus(m_pRAM[addr]);
+          }
+        }
+        else
+        {
+          m_pRAM[addr]=pSystemState->cpuState.d0d7;
+        }
+    }
+    else if (addr>=0xe000 && addr<=0xffff)    
+    {
+        if (pSystemState->cpuState.readNotWrite)  // READ 
+        {
+          if (IsKernalRomVisible())                  
+          {
+            // Character ROM
+            WriteDataBus(kernal_rom[addr-0xe000]);
+          }
+          else
+          {
+            WriteDataBus(m_pRAM[addr]);
+          }
+        }
+        else
+        {
+          // Always write to RAM 
+          m_pRAM[addr]=pSystemState->cpuState.d0d7;
+        }
+    }
+    else  // std. RAM
+    {
+        if (pSystemState->cpuState.readNotWrite)  // READ 
+        {
+          WriteDataBus(m_pRAM[addr]);
+        }
+        else
+        {
+          m_pRAM[addr]=pSystemState->cpuState.d0d7;
+        }
     }
   }
 }

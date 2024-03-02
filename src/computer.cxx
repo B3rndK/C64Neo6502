@@ -1,3 +1,8 @@
+/**
+ * Written by Bernd Krekeler, Herne, Germany
+ * 
+*/
+
 #include <hardware/gpio.h>
 #include <hardware/adc.h>
 #include <pico/stdlib.h>

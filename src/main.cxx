@@ -6,7 +6,7 @@
  * To debug, please remember to start openocd before in a shell.
  * Start debug output as well for debugging in minicom.
  * 
- * (C)2023 Bernd Krekeler, Herne, Germany
+ * Written 2023, 2024 by Bernd Krekeler, Herne, Germany
  * 
  * 1- R/W#
  * 2- A0
@@ -44,7 +44,7 @@
 #define WAIT_FOR_USB_INIT_TIMEOUT_IN_MS 2000
 
 int main() {
-   adc_init();    
+  adc_init();    
   stdio_init_all();
   sleep_ms(2000);
   /* In case of problems, RESET USB and exit in order to make ttyACM1 reappear. */
