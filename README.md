@@ -30,7 +30,7 @@ I am using Visual Studio Code and the following plugins:
 </ul>
 
 ### Build
-Building this emulator is straightforward. Create (mkdir) and then cd to a **build** subfolder, then run **cmake ..*.
+Building this emulator is straightforward. Create (mkdir) and then cd to a **build** subfolder, then run `cmake ..`
 Please see the `CMakeLists.txt` file in case you do not want Simon's Basic support. You can simply remove `_SIMONS_BASIC` from the compile definition list.  
 
 ## ROMs
