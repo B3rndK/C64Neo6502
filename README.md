@@ -67,7 +67,7 @@ DVI output is now implemented for all official C-64 VIC modes, textmode, multico
 Keyboard input is currently handled by directly attaching a usb keyboard. There is currently no USB-hub supported, so you have to connect your USB keyboard directly.
 
 ## WIP
-This is work in progress and is set up for fun. I will continue to improve the emulation by adding hires-mode (320x200) and better keyboard support via CIA#1 next.
+This is work in progress and is set up for fun. I will continue to improve the emulation. Next is a better keyboard support via CIA#1.
 
 ## How does it look?
 * This is how it currently looks like:
