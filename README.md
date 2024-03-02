@@ -69,10 +69,14 @@ Keyboard input is currently handled by directly attaching a usb keyboard. There 
 This is work in progress and is set up for fun. I will continue to improve the emulation by adding hires-mode (320x200) and better keyboard support via CIA#1 next.
 
 ## How does it look?
-This is how it currently looks like:
-
+* This is how it currently looks like:
 
 https://github.com/B3rndK/C64Neo6502/assets/47975140/b9c2fc19-d006-4a64-adb6-9a790b7ab940
+
+* How to activate the expanded basic (and run a little 3D-Mandelbrot-Set):
+
+
+https://github.com/B3rndK/C64Neo6502/assets/47975140/3b8debd9-2552-4bcd-9083-cc5b92138464
 
 
 
