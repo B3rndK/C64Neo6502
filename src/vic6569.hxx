@@ -22,8 +22,16 @@ class VIC6569 {
 
     void UpdateFrameBuffer();
     void HandleTextMode(bool multicolor);
-    void HandleHiresMode(bool multicolor);
-    
+    void HandleHiresModes(bool multicolor);
+    void HandleStandardBitmapMode();
+    void HandleMulticolorBitmapMode();
+    void HandleStandardTextMode();
+    void HandleMulticolorTextMode();
+    void HandleExtendedColorMode();
+    uint16_t GetVideoRamStartAddr(bool bitmapMode);
+    inline uint16_t GetTextModeCharRamAddrOffset();
+    inline uint16_t GetVideoRamAddrOffset();
+  
   public:
     VIC6569(Logging *pLogging, RpPetra *pGlue);
     virtual ~VIC6569();

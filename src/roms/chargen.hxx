@@ -1,9 +1,13 @@
 #pragma once
 
-// clang-format off
-uint8_t __in_flash() chargen_rom[] = {
-	0x3c, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
-	/* Please add everything else here ... */
+#ifndef _CHARGEN_ROM
+#define _CHARGEN_ROM
+
+uint8_t __not_in_flash() chargen_rom[] = {
+	0x3c, 
+  
+  /** Commodore CHARGEN ROM goes here ... */
+  
   0xf0
 };
-// clang-format off
+#endif

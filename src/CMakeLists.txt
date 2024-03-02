@@ -12,7 +12,7 @@ set(CMAKE_CXX_STANDARD 11)
 
 #set(CMAKE_CXX_FLAGS "-Wall -Wextra")
 #set(CMAKE_CXX_FLAGS_DEBUG "-g -Og")
-set(CMAKE_CXX_FLAGS_DEBUG "-g -Og")
+set(CMAKE_CXX_FLAGS_DEBUG "-g -O0")
 set(CMAKE_CXX_FLAGS_RELEASE "-O2")
 
 include(FetchContent)
@@ -70,7 +70,7 @@ add_executable(computer
 )
 
 # Comment in for release version 
-add_compile_definitions(_RELEASE _MONITOR_CARTRIDGE)
+add_compile_definitions(_DEBUG _MONITOR_CARTRIDGE _SIMONS_BASIC)
 
 # Add pico_stdlib library which aggregates commonly used features
 target_link_libraries(computer pico_stdlib hardware_adc hardware_dma hardware_pio pico_time pico_multicore libdvi tinyusb_host tinyusb_board tinyusb_device)
