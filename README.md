@@ -49,12 +49,12 @@ This was a very popular extended basic for the C-64. I also included support for
   <li>simons_basic.hxx</li>
 </ul><br>
 
-In order to boot Simon's Basic, you have to enter `POKE 32776,48` and then restart the C-64 by typing `SYS 64738'. You will be presented the welcome screen. Here you can type `OLD` to recover the basic program. Then enter `LIST` to edit it or `RUN` to start it.
+In order to boot Simon's Basic, you have to enter `POKE 32776,48` and then restart the C-64 by typing `SYS 64738`. You will be presented the welcome screen. Here you can type `OLD` to recover the basic program. Then enter `LIST` to edit it or `RUN` to start it.
 
 
 
 ### Monitor
-I included a small machine code monitor at $c000 (sys 49152).
+I included a small machine code monitor at $c000 (`SYS 49152`).
 
 ## Sound
 There is no sound yet.
