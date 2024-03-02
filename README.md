@@ -43,15 +43,15 @@ Due to copyright reasons, I cannot include the C-64 bios files "basic", "kernal"
 </ul><br>
 replacing the included but invalid files.
 
+* Note: In case you plan to upload the compiled `.UF2` of this emulator to a website, please ensure you are legally allowed to do this because of these still copyrighted ROMs.
+
 ### Simon's Basic
-This was a very popular extended basic for the C-64. I also included support for this. You need to dump $8000-BFFF of the software. I cannot provide it to you due to copyright laws:
+This was a very popular expanded basic for the C-64. I also included support for this. You need to dump $8000-BFFF of the software. I cannot provide it to you due to copyright laws:
 <ul>
   <li>simons_basic.hxx</li>
 </ul><br>
 
 In order to boot Simon's Basic, you have to enter `POKE 32776,48` and then restart the C-64 by typing `SYS 64738`. You will be presented the welcome screen. Here you can type `OLD` to recover the basic program. Then enter `LIST` to edit it or `RUN` to start it.
-
-
 
 ### Monitor
 I included a small machine code monitor at $c000 (`SYS 49152`).
