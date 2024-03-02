@@ -42,8 +42,9 @@ Due to copyright reasons, I cannot include the C-64 bios files "basic", "kernal"
   <li>chargen.hxx</li>
 </ul><br>
 replacing the included but invalid files.
-
-* Note: In case you plan to upload the compiled `.UF2` of this emulator to a website, please ensure you are legally allowed to do this because of these still copyrighted ROMs.
+<BR>
+<BR>
+Note: In case you want to upload the compiled `UF2` of this emulator to a website, please ensure you are legally entitled to do this because of these still copyrighted ROMs.
 
 ### Simon's Basic
 This was a very popular expanded basic for the C-64. I also included support for this. You need to dump $8000-BFFF of the software. I cannot provide it to you due to copyright laws:
