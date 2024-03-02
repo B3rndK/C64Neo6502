@@ -2,10 +2,11 @@
 C64 emulation using the Neo6502 development board 
 
 ## What it is used for
-I coded this because the Neo6502 seems to be a very good piece of hardware to refresh old memories and to deal with microprocessor bus interfacing on hardware level by using a common high level programming language instead of e.g. VHDL or VERILOG. I see this as being in the middle of purely software based emulation and pure hardware simulation by using FPGAs. By looking at the code and debugging you can see how to initiate the RESET sequence of the 65C02, how to interface with RAM / ROM and how to do mapped IO and create hardware interrupts. It also enables to debug the internals of the C-64 to check, e.g. how the Kernal detects PAL or NTSC machines etc. To cut a long story short: It should be fun!
+I coded this because the Neo6502 seems to be a very good piece of hardware to refresh old memories and to deal with microprocessor bus interfacing on hardware level by using a common high level programming language instead of e.g. VHDL or VERILOG. I see this as being in the middle of purely software based emulation and pure hardware simulation by using FPGAs. By looking at the code and debugging you can see how to initiate the RESET sequence of the 65C02, how to interface with RAM / ROM and how to do mapped IO and create hardware interrupts. It also enables to debug the internals of the C-64 to check, e.g. how the Kernal detects PAL or NTSC machines etc. The real fun is to learn C-64 programming or even to extend this emulation. May the source code inspire other developers to reuse it and make it better.
+To cut a long story short: It should be fun!
 
 ## What it is not
-It is not an emulation which you can use to play serious action games (yet). The real fun is to learn C-64 programming or even to extend this emulation. May the source code inspire other developers to reuse it and make it better.
+It is not an emulation which you can use to play serious action games (yet). Sprites and sound are still missing.
 
 ## Prerequisits
 I am following the wireing standard from Vaselin Sladkov, so in order to have the RP2040 create real interrupts please connect pin 10 of UEXT connector (GPIO 25) to pin 24 of 6502 bus connector (IRQ) using an external wire. Furthermore we will need to create a real RESET signal, so please connect pin 9 of the UEXT connector to pin 40 (RESET) as well as pin 8 of the UEXT connector to pin 26 (NMI) of the 6502 bus.
