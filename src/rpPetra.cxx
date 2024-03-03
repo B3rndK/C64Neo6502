@@ -44,7 +44,7 @@ extern uint8_t simons_basic[];
 
 */
 
-// static u_int8_t benchmark[]={0xA9, 0x00, 0xAA, 0xA8, 0xE8, 0xD0, 0xFD,0xC8,0xD0,0xFA,0xAA,0xE8,0x8A,0xC9,0xFF,0xD0,0xF3,0x8D,0x20,0xD0,0x4C,0x04,0xE0};
+// static uint8_t benchmark[]={0xA9, 0x00, 0xAA, 0xA8, 0xE8, 0xD0, 0xFD,0xC8,0xD0,0xFA,0xAA,0xE8,0x8A,0xC9,0xFF,0xD0,0xF3,0x8D,0x20,0xD0,0x4C,0x04,0xE0};
 
 static char Charset[]={ '@','A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z',
                         '[','#',']','#','#',' ','!','"','#','$','%','&','`','(',')','*','+',',','-','.','/','0','1','2','3','4','5','6','7','8','9',
@@ -57,7 +57,7 @@ RpPetra::RpPetra(Logging *pLogging, RP65C02 *pCPU)
     m_pCIA1 = new CIA6526(pLogging, this);
     m_pCIA2 = new CIA6526(pLogging, this);
     m_pVICII= new VIC6569(pLogging, this);
-    m_pRAM=(u_int8_t *)calloc(65536,sizeof(u_int8_t));
+    m_pRAM=(uint8_t *)calloc(65536,sizeof(uint8_t));
     m_pRAM[1]=55;
 
 #ifdef _MONITOR_CARTRIDGE

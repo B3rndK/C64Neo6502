@@ -8,7 +8,7 @@ extern  dvi_inst *g_pDVI;
 class VideoOut {
 
   public:
-    VideoOut(Logging *pLog, RpPetra *pGlue, u_int8_t *pFrameBuffer);
+    VideoOut(Logging *pLog, RpPetra *pGlue, uint8_t *pFrameBuffer);
     void Reset();
     void Start();
   private:

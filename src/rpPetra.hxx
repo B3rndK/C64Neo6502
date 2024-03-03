@@ -10,8 +10,8 @@
 typedef struct 
 {
   bool  isRisingEdge;
-  u_int16_t a0a15;
-  u_int8_t d0d7;
+  uint16_t a0a15;
+  uint8_t d0d7;
   bool readNotWrite;
   bool isA0A15SetToOutput;
 } CPUSTATE;
@@ -42,7 +42,7 @@ class RpPetra {
   public: 
     Logging *m_pLog;    
     VIC6569 *m_pVICII;  
-    u_int8_t *m_pRAM;
+    uint8_t *m_pRAM;
     CIA6526 *m_pCIA1;
     CIA6526 *m_pCIA2;
   private:

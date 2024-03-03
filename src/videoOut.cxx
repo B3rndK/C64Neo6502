@@ -45,16 +45,16 @@ static const struct dvi_serialiser_cfg picodvi_cfg = {
 };
 
 // C64 color schema as 565
-const u_int16_t colorIndex[]={0x0000,0xffff,0x8187,0x7679,0x89f2,0x55e9,0x2973,0xef8e,0x9a85,0x51c0,0xC36E,0x4228,0x8c51,0x8ff1,0x8c5f,0xce59};
+const uint16_t colorIndex[]={0x0000,0xffff,0x8187,0x7679,0x89f2,0x55e9,0x2973,0xef8e,0x9a85,0x51c0,0xC36E,0x4228,0x8c51,0x8ff1,0x8c5f,0xce59};
 
-u_int8_t *frameBuffer;
+uint8_t *frameBuffer;
 dvi_inst *g_pDVI; 
 uint16_t *pScanLine;
 uint16_t *pCurScanLine;
 
 RpPetra *_pGlue; 
 
-VideoOut::VideoOut(Logging *pLog, RpPetra *pGlue, u_int8_t *pFrameBuffer)
+VideoOut::VideoOut(Logging *pLog, RpPetra *pGlue, uint8_t *pFrameBuffer)
 {
    m_pLog=pLog;
    _pGlue=pGlue;
@@ -96,14 +96,14 @@ static void __not_in_flash_func(beamRace)(void)
     leftBorderEnd=28;
   }
   bool isScreenSwitchedOff=((currentBeamPos<=upperBorderStop) || (currentBeamPos>=lowerBorderStart) || !(_pGlue->m_pVICII->m_registerSetRead[0x11] & 0x10));
-
-  u_int16_t color=colorIndex[(_pGlue->m_pVICII->m_registerSetRead[0x20]) & 0x0f];
-  u_int32_t *pP=(u_int32_t *)pScanLine;
+  
+  uint16_t color=colorIndex[(_pGlue->m_pVICII->m_registerSetRead[0x20]) & 0x0f];
+  uint32_t *pP=(uint32_t *)pScanLine;
   
   // Draw the border(s), 32-bits at a time
   for (int i=0;i<340/2;i++)
   {
-    pP[i]=(u_int32_t) (color << 16) | color;
+    pP[i]=(uint32_t) (color << 16) | color;
   }
 
   while (queue_try_remove_u32(&g_pDVI->q_colour_free, &pScanLine));  
@@ -113,8 +113,8 @@ static void __not_in_flash_func(beamRace)(void)
     if (currentBeamPos<lowerBorderStart-upperBorderStop && currentBeamPos>upperBorderStop)
     {
       int x=leftBorderEnd/3;
-      u_int8_t *pCurBuffer = frameBuffer+((currentBeamPos-upperBorderStop)*160);
-      u_int8_t pixel; 
+      uint8_t *pCurBuffer = frameBuffer+((currentBeamPos-upperBorderStop)*160);
+      uint8_t pixel; 
       // 2 pixels encoded in 4-bits... This way we can easily support even VIC's FLI color modes later on...
       for (int i=0;i<320/2;i++) {
           pixel=pCurBuffer[i]; 

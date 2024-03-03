@@ -66,7 +66,7 @@ void CIA6526::Clk()
   }
 }
 
-u_int8_t CIA6526::ReadRegister(u_int8_t reg) 
+uint8_t CIA6526::ReadRegister(uint8_t reg) 
 {
   uint8_t ret = m_registerSet[reg];
   if (reg==0x0d)
@@ -81,7 +81,7 @@ u_int8_t CIA6526::ReadRegister(u_int8_t reg)
 };
 
 
-void CIA6526::WriteRegister(u_int8_t reg, u_int8_t value)
+void CIA6526::WriteRegister(uint8_t reg, uint8_t value)
 {
   if (reg==0x0d)
   {

@@ -15,10 +15,10 @@ class VIC6569 {
   private:  
     Logging *m_pLog;
     RpPetra *m_pGlue; 
-    u_int64_t m_i64Clks;
-    u_int8_t m_registerSetWrite[0x2f];
-    u_int16_t m_currentScanLine;
-    u_int8_t *m_pFrameBuffer;
+    uint64_t m_i64Clks;
+    uint8_t m_registerSetWrite[0x2f];
+    uint16_t m_currentScanLine;
+    uint8_t *m_pFrameBuffer;
 
     void UpdateFrameBuffer();
     void HandleTextMode(bool multicolor);
@@ -37,9 +37,9 @@ class VIC6569 {
     virtual ~VIC6569();
     void Reset();
     void Clk();
-    void WriteRegister(u_int8_t reg, u_int8_t value);
-    inline u_int8_t *GetFrameBuffer() { return m_pFrameBuffer;};
-    u_int8_t m_registerSetRead[0x2f];    
+    void WriteRegister(uint8_t reg, uint8_t value);
+    inline uint8_t *GetFrameBuffer() { return m_pFrameBuffer;};
+    uint8_t m_registerSetRead[0x2f];    
 };
 
 #endif
