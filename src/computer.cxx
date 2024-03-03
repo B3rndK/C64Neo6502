@@ -25,7 +25,7 @@
 
 */
 
-static const u_int8_t _keyboard_mapping[]={0,0,0,0,65,66,67,68,69,70, //0 
+static const uint8_t _keyboard_mapping[]={0,0,0,0,65,66,67,68,69,70, //0 
                                      71,72,73,74,75,76,77,78,79,80, // 10
                                      81,82,83,84,85,86,87,88,89,90, // 20  (Z)
                                      49,50,51,52,53,54,55,56,57,48, // 30 (1)
@@ -39,7 +39,7 @@ static const u_int8_t _keyboard_mapping[]={0,0,0,0,65,66,67,68,69,70, //0
                                      0,0,0,0,0,0,0,0,0,0, // 110
                                      0,0,0,0,0,0,0};
 
-static const u_int8_t _keyboard_mapping_shift[]={0,0,0,0,65,66,67,68,69,70, //0 
+static const uint8_t _keyboard_mapping_shift[]={0,0,0,0,65,66,67,68,69,70, //0 
                                      71,72,73,74,75,76,77,78,79,80, // 10
                                      81,82,83,84,85,86,87,88,89,90, // 20  (Z)
                                      33,34,35,36,37,38,39,40,41,61, // 30, !
@@ -54,7 +54,7 @@ static const u_int8_t _keyboard_mapping_shift[]={0,0,0,0,65,66,67,68,69,70, //0
                                      0,0,0,0,0,0,0};
 
 
-static const u_int8_t _keyboard_mapping_ctrl[]={0,0,0,0,0,0,0,0,0,0, // 0
+static const uint8_t _keyboard_mapping_ctrl[]={0,0,0,0,0,0,0,0,0,0, // 0
                                                 0,0,0,0,0,0,0,0,0,0, // 10
                                                 0,0,0,0,0,0,0,0,0,0, // 20 
                                                 0x1c,0x05,28,0x9f,0x9c,30,158,0x0a,0x12,0x92, // 30
@@ -69,7 +69,7 @@ static const u_int8_t _keyboard_mapping_ctrl[]={0,0,0,0,0,0,0,0,0,0, // 0
                                                 0,0,0,0,0,0,0,0,0,0,
                                                 0,0,0,0,0,0,0,0};
 
-static const u_int8_t _keyboard_mapping_commodore[]={0,0,0,0,0,0,0,0,0,0, // 0
+static const uint8_t _keyboard_mapping_commodore[]={0,0,0,0,0,0,0,0,0,0, // 0
                                                 0,0,0,0,0,0,0,0,0,0, // 10
                                                 0,0,0,0,0,0,0,0,0,0, // 20 
                                                 0x1c,0x05,28,0x9f,0x9c,30,158,0x0a,0x12,0x92, // 30

@@ -26,13 +26,13 @@ class Computer {
     // We need some (EEP)ROM
     //RP_ROM *m_pROM;
     // We need some RAM...
-    u_int8_t *m_pRAM;
+    uint8_t *m_pRAM;
 
     // Petra, our custom chip keeping it all together
     RpPetra *m_pGlue;
 
     int m_WaitCycles;
-    u_int64_t m_totalCyles;
+    uint64_t m_totalCyles;
   private:
     
     SYSTEMSTATE m_systemState;

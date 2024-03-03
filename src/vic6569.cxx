@@ -21,7 +21,7 @@ VIC6569::VIC6569(Logging *pLogging, RpPetra *pGlue)
    m_pLog=pLogging;
    m_pGlue=pGlue;
    // We need a frame buffer of only 160*200 due to 4-bit per Pixel
-   m_pFrameBuffer=(u_int8_t *)calloc((160*200),sizeof(u_int8_t));
+   m_pFrameBuffer=(uint8_t *)calloc((160*200),sizeof(uint8_t));
 }
 
 VIC6569::~VIC6569() {};
@@ -68,29 +68,29 @@ void VIC6569::UpdateFrameBuffer()
 */
 void VIC6569::HandleExtendedColorMode()
 {
-    u_int8_t backgroundColors[4];
+    uint8_t backgroundColors[4];
     
-    u_int8_t *pCurrentLine=m_pFrameBuffer+((m_currentScanLine-(END_SCANLINE_UPPER_BORDER_PAL+1))*160);
+    uint8_t *pCurrentLine=m_pFrameBuffer+((m_currentScanLine-(END_SCANLINE_UPPER_BORDER_PAL+1))*160);
     uint16_t curRow=(m_currentScanLine-(END_SCANLINE_UPPER_BORDER_PAL+1))/8;
-    u_int16_t scanbufferOffset=0;
+    uint16_t scanbufferOffset=0;
     
-    u_int16_t characterRamOffset=GetTextModeCharRamAddrOffset();
-    u_int16_t vicBaseAddress=GetVideoRamStartAddr(false); // VIC bank physical address
-    u_int8_t bits;
-    u_int16_t videoRam=GetVideoRamAddrOffset()+vicBaseAddress; // 0x400...
+    uint16_t characterRamOffset=GetTextModeCharRamAddrOffset();
+    uint16_t vicBaseAddress=GetVideoRamStartAddr(false); // VIC bank physical address
+    uint8_t bits;
+    uint16_t videoRam=GetVideoRamAddrOffset()+vicBaseAddress; // 0x400...
 
     backgroundColors[0]=m_registerSetRead[0x21] & 0x0f;
     backgroundColors[1]=m_registerSetRead[0x22] & 0x0f;
     backgroundColors[2]=m_registerSetRead[0x23] & 0x0f;
     backgroundColors[3]=m_registerSetRead[0x24] & 0x0f;
-    u_int8_t backgroundColor;
+    uint8_t backgroundColor;
 
     for (int i=0;i<40;i++) 
     {
       int offset=curRow*40+i;
       
-      u_int8_t characterInVideoRam=m_pGlue->m_pRAM[videoRam+offset];
-      u_int8_t foregroundColor=m_pGlue->m_pRAM[0xd800+offset] & 0x0f;
+      uint8_t characterInVideoRam=m_pGlue->m_pRAM[videoRam+offset];
+      uint8_t foregroundColor=m_pGlue->m_pRAM[0xd800+offset] & 0x0f;
       backgroundColor=backgroundColors[characterInVideoRam/64];
       characterInVideoRam%=64;
      
@@ -180,25 +180,25 @@ void VIC6569::HandleExtendedColorMode()
 
 void VIC6569::HandleMulticolorTextMode()
 {
-    u_int8_t *pCurrentLine=m_pFrameBuffer+((m_currentScanLine-(END_SCANLINE_UPPER_BORDER_PAL+1))*160);
+    uint8_t *pCurrentLine=m_pFrameBuffer+((m_currentScanLine-(END_SCANLINE_UPPER_BORDER_PAL+1))*160);
     uint16_t curRow=(m_currentScanLine-(END_SCANLINE_UPPER_BORDER_PAL+1))/8;
-    u_int16_t scanbufferOffset=0;
-    u_int8_t pixel;
+    uint16_t scanbufferOffset=0;
+    uint8_t pixel;
 
-    u_int16_t characterRamOffset=GetTextModeCharRamAddrOffset();
-    u_int16_t vicBaseAddress=GetVideoRamStartAddr(false); // VIC bank physical address
-    u_int8_t bits;
-    u_int16_t videoRam=GetVideoRamAddrOffset()+vicBaseAddress; // 0x400...
+    uint16_t characterRamOffset=GetTextModeCharRamAddrOffset();
+    uint16_t vicBaseAddress=GetVideoRamStartAddr(false); // VIC bank physical address
+    uint8_t bits;
+    uint16_t videoRam=GetVideoRamAddrOffset()+vicBaseAddress; // 0x400...
 
-    u_int8_t backgroundColor=m_registerSetRead[0x21] & 0x0f;
-    u_int8_t color1=m_registerSetRead[0x22] & 0x0f; // 01
-    u_int8_t color2=m_registerSetRead[0x23] & 0x0f; // 10
+    uint8_t backgroundColor=m_registerSetRead[0x21] & 0x0f;
+    uint8_t color1=m_registerSetRead[0x22] & 0x0f; // 01
+    uint8_t color2=m_registerSetRead[0x23] & 0x0f; // 10
     
     for (int i=0;i<40;i++) 
     {
       int offset=curRow*40+i;
       
-      u_int8_t characterInVideoRam=m_pGlue->m_pRAM[videoRam+offset];
+      uint8_t characterInVideoRam=m_pGlue->m_pRAM[videoRam+offset];
 
       if ((characterRamOffset==0x1000 || characterRamOffset==0x1800) && (vicBaseAddress==0x0000 || vicBaseAddress==0x8000))
       {
@@ -209,7 +209,7 @@ void VIC6569::HandleMulticolorTextMode()
         bits=m_pGlue->m_pRAM[vicBaseAddress+characterRamOffset+(8*characterInVideoRam)+((m_currentScanLine-(END_SCANLINE_UPPER_BORDER_PAL+1)) % 8)];
       }
       
-      u_int8_t color3=m_pGlue->m_pRAM[0xd800+(curRow*40+i)] % 0b00001111; // 11
+      uint8_t color3=m_pGlue->m_pRAM[0xd800+(curRow*40+i)] % 0b00001111; // 11
 
       if (color3 & 8)
       {
@@ -320,19 +320,19 @@ void VIC6569::HandleMulticolorTextMode()
 
 void VIC6569::HandleStandardTextMode()
 {
-    u_int8_t *pCurrentLine=m_pFrameBuffer+((m_currentScanLine-(END_SCANLINE_UPPER_BORDER_PAL+1))*160);
+    uint8_t *pCurrentLine=m_pFrameBuffer+((m_currentScanLine-(END_SCANLINE_UPPER_BORDER_PAL+1))*160);
     uint16_t curRow=(m_currentScanLine-(END_SCANLINE_UPPER_BORDER_PAL+1))/8;
-    u_int16_t scanbufferOffset=0;
-    u_int16_t characterRamOffset=GetTextModeCharRamAddrOffset();
-    u_int16_t vicBaseAddress=GetVideoRamStartAddr(false); // VIC bank physical address
-    u_int8_t bits;
-    u_int16_t videoRam=GetVideoRamAddrOffset()+vicBaseAddress; // 0x400...
+    uint16_t scanbufferOffset=0;
+    uint16_t characterRamOffset=GetTextModeCharRamAddrOffset();
+    uint16_t vicBaseAddress=GetVideoRamStartAddr(false); // VIC bank physical address
+    uint8_t bits;
+    uint16_t videoRam=GetVideoRamAddrOffset()+vicBaseAddress; // 0x400...
     
     for (int i=0;i<40;i++) 
     {
       int offset=curRow*40+i;
       
-      u_int8_t characterInVideoRam=m_pGlue->m_pRAM[videoRam+offset];
+      uint8_t characterInVideoRam=m_pGlue->m_pRAM[videoRam+offset];
       
       if ((characterRamOffset==0x1000 || characterRamOffset==0x1800) && (vicBaseAddress==0x0000 || vicBaseAddress==0x8000))
       {
@@ -343,8 +343,8 @@ void VIC6569::HandleStandardTextMode()
         bits=m_pGlue->m_pRAM[vicBaseAddress+characterRamOffset+(8*characterInVideoRam)+((m_currentScanLine-(END_SCANLINE_UPPER_BORDER_PAL+1)) % 8)];
       }
 
-      u_int8_t foregroundColor=m_pGlue->m_pRAM[0xd800+offset] & 0x0f;
-      u_int8_t backgroundColor=m_registerSetRead[0x21] & 0x0f;
+      uint8_t foregroundColor=m_pGlue->m_pRAM[0xd800+offset] & 0x0f;
+      uint8_t backgroundColor=m_registerSetRead[0x21] & 0x0f;
     
       
       if (bits & 0x80)
@@ -489,14 +489,14 @@ void VIC6569::HandleHiresModes(bool multicolor)
 void VIC6569::HandleStandardBitmapMode()
 {
     uint8_t scanLine=m_currentScanLine-(END_SCANLINE_UPPER_BORDER_PAL+1);
-    u_int8_t *pCurrentLine=m_pFrameBuffer+((scanLine)*160);
+    uint8_t *pCurrentLine=m_pFrameBuffer+((scanLine)*160);
     videoRamStartAddr=GetVideoRamStartAddr(true);
     uint16_t vicBaseAddr=GetVideoRamStartAddr(false);
     uint16_t curRow=(scanLine/8); // 0-24
-    u_int16_t scanbufferOffset=0;
+    uint16_t scanbufferOffset=0;
     uint16_t curVidMem=videoRamStartAddr+(curRow*320);
     curVidMem+=(scanLine % 8);
-    u_int8_t bits;
+    uint8_t bits;
     uint16_t videoRamAddrOffset=GetVideoRamAddrOffset(); // 0x400,0x800...
 
     for (int i=0;i<40;i++) 
@@ -517,8 +517,8 @@ void VIC6569::HandleStandardBitmapMode()
         bits=m_pGlue->m_pRAM[curVidMem];
       }
 
-      u_int8_t foregroundColor=(m_pGlue->m_pRAM[vicBaseAddr+videoRamAddrOffset+(curRow*40+i)] & 0b11110000) >> 4;
-      u_int8_t backgroundColor=m_pGlue->m_pRAM[vicBaseAddr+videoRamAddrOffset+(curRow*40+i)] & 0b00001111;
+      uint8_t foregroundColor=(m_pGlue->m_pRAM[vicBaseAddr+videoRamAddrOffset+(curRow*40+i)] & 0b11110000) >> 4;
+      uint8_t backgroundColor=m_pGlue->m_pRAM[vicBaseAddr+videoRamAddrOffset+(curRow*40+i)] & 0b00001111;
       
       if (bits & 0x80)
       {
@@ -602,25 +602,25 @@ void VIC6569::HandleStandardBitmapMode()
 void VIC6569::HandleMulticolorBitmapMode()
 {
     uint8_t scanLine=m_currentScanLine-(END_SCANLINE_UPPER_BORDER_PAL+1);
-    u_int8_t *pCurrentLine=m_pFrameBuffer+((scanLine)*160);
+    uint8_t *pCurrentLine=m_pFrameBuffer+((scanLine)*160);
     videoRamStartAddr=GetVideoRamStartAddr(true);
     uint16_t curRow=(scanLine/8); // 0-24
-    u_int16_t scanbufferOffset=0;
+    uint16_t scanbufferOffset=0;
     uint16_t curVidMem=videoRamStartAddr+(curRow*320);
     uint16_t vicBaseAddr=GetVideoRamStartAddr(false);
     uint16_t videoRamAddrOffset=GetVideoRamAddrOffset(); // 0x400,0x800...
 
     curVidMem+=(scanLine % 8);
-    u_int8_t bits;
+    uint8_t bits;
 
-    u_int8_t backgroundColor=m_registerSetRead[0x21] & 0b00001111; // 00
+    uint8_t backgroundColor=m_registerSetRead[0x21] & 0b00001111; // 00
     uint8_t pixel;
 
     for (int i=0;i<40;i++) 
     {
-      u_int8_t color1=(m_pGlue->m_pRAM[vicBaseAddr+videoRamAddrOffset+(curRow*40+i)] & 0b11110000) >> 4; // 01
-      u_int8_t color2=m_pGlue->m_pRAM[vicBaseAddr+videoRamAddrOffset+(curRow*40+i)] & 0b00001111; // 10
-      u_int8_t color3=m_pGlue->m_pRAM[0xd800+(curRow*40+i)] & 0b00001111; // 11
+      uint8_t color1=(m_pGlue->m_pRAM[vicBaseAddr+videoRamAddrOffset+(curRow*40+i)] & 0b11110000) >> 4; // 01
+      uint8_t color2=m_pGlue->m_pRAM[vicBaseAddr+videoRamAddrOffset+(curRow*40+i)] & 0b00001111; // 10
+      uint8_t color3=m_pGlue->m_pRAM[0xd800+(curRow*40+i)] & 0b00001111; // 11
 
 
       if (vicBaseAddr==0x0000 || vicBaseAddr==0x8000) // Bank 0,2
@@ -671,8 +671,8 @@ void VIC6569::HandleMulticolorBitmapMode()
 
 void VIC6569::Clk() 
 {
-  static u_int8_t frameNoToRefresh=1;
-  static u_int8_t currentFrame=1;
+  static uint8_t frameNoToRefresh=1;
+  static uint8_t currentFrame=1;
   m_i64Clks++;
   
   // Every 63 clocks the VIC starts a new line
@@ -728,7 +728,7 @@ void VIC6569::Clk()
 }
 
 // reg 0x16 Bit 3, 40 (1) or 38 columns (0)
-void VIC6569::WriteRegister(u_int8_t reg, u_int8_t value)
+void VIC6569::WriteRegister(uint8_t reg, uint8_t value)
 {
   switch (reg)
   {
