@@ -51,11 +51,12 @@ This was a very popular expanded basic for the C-64. I also included support for
 <ul>
   <li>simons_basic.hxx</li>
 </ul><br>
-
+In case you have licensed Simon's Basic, you can enable this module within the `CMakeLists.txt`. It is switched off by default.
 In order to boot Simon's Basic, you have to enter `POKE 32776,48` and then restart the C-64 by typing `SYS 64738`. You will be presented the welcome screen. Here you can type `OLD` to recover the basic program. Then enter `LIST` to edit it or `RUN` to start it.
 
 ### Monitor
 I included a small machine code monitor at $c000 (`SYS 49152`).
+You can enable this module within the `CMakeLists.txt`. It is switched off by default.
 
 ## Sound
 There is no sound yet.
