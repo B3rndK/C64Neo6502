@@ -2,12 +2,7 @@
  * Written by Bernd Krekeler, Herne, Germany
  * 
 */
-
-#include <stdio.h>
-#include <hardware/gpio.h>
-#include <pico/time.h>
-#include "logging.hxx"
-#include "rp65c02.hxx"
+#include "stdinclude.hxx"
 
 RP65C02::RP65C02(Logging *pLogging)
 {

@@ -12,8 +12,8 @@ set(CMAKE_CXX_STANDARD 11)
 
 #set(CMAKE_CXX_FLAGS "-Wall -Wextra")
 #set(CMAKE_CXX_FLAGS_DEBUG "-g -Og")
-set(CMAKE_CXX_FLAGS_DEBUG "-g -O0")
-set(CMAKE_CXX_FLAGS_RELEASE "-O2")
+set(CMAKE_CXX_FLAGS_DEBUG "-g")
+set(CMAKE_CXX_FLAGS_RELEASE "-O3")
 
 include(FetchContent)
 
@@ -27,7 +27,7 @@ set(PICO_TINYUSB_PATH ${tinyusb_SOURCE_DIR})
 
 pico_sdk_init()
 
-add_compile_options(-Wall -Werror -O2)
+add_compile_options(-Wall -Werror -g -O2)
 
 # To change the default serial config for all apps, pass e.g.
 #   cmake -DDVI_DEFAULT_SERIAL_CONFIG=pimoroni_demo_hdmi_cfg ..
@@ -67,10 +67,11 @@ add_executable(computer
   cia6526.cxx
   rpPetra.cxx
   computer.cxx
+  keyboard.cxx
 )
 
 # Comment in for release version 
-add_compile_definitions(_DEBUG _MONITOR_CARTRIDGE _SIMONS_BASIC)
+add_compile_definitions(_DEBUG _NO_MONITOR_CARTRIDGE _NO_SIMONS_BASIC _NO_TRAPDOOR)
 
 # Add pico_stdlib library which aggregates commonly used features
 target_link_libraries(computer pico_stdlib hardware_adc hardware_dma hardware_pio pico_time pico_multicore libdvi tinyusb_host tinyusb_board tinyusb_device)

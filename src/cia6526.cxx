@@ -1,19 +1,12 @@
 /**
  * Written by Bernd Krekeler, Herne, Germany
  * 
+ * CIA#1 ($DC00) PA0-PA7: JOY0-3, BNT-4 /COL0-COL7
+ *               PB0-PB7: ROW0-ROW7
+ * 
 */
 
-#include <stdio.h>
-#include <hardware/gpio.h>
-#include <dvi.h>
-#include <dvi_serialiser.h>
-#include "logging.hxx"
-#include "rp65c02.hxx"
-#include "cia6526.hxx"
-#include "vic6569.hxx"
-#include "videoOut.hxx"
-#include "rpPetra.hxx"
-
+#include "stdinclude.hxx"
 
 CIA6526::CIA6526(Logging *pLogging, RpPetra *pGlue)
 {

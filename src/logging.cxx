@@ -3,14 +3,7 @@
  * 
 */
 
-#include <stdarg.h>
-#include <stdio.h>
-#include <iostream>
-#include <string>
-#include <initializer_list>
-#include "terminalBase.hxx"
-#include "ansiTerminal.hxx"
-#include "logging.hxx"  
+#include "stdinclude.hxx"
 
 #ifdef _DEBUG
 

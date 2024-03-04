@@ -3,18 +3,7 @@
  * 
 */
 
-#include <stdio.h>
-#include <string.h>
-#include <hardware/gpio.h>
-#include <dvi.h>
-#include <dvi_serialiser.h>
-#include "logging.hxx"
-#include "rp65c02.hxx"
-#include "cia6526.hxx"
-#include "vic6569.hxx"
-#include "videoOut.hxx"
-#include "rpPetra.hxx"
-#include "roms/chargen.hxx"
+#include "stdinclude.hxx"
 
 VIC6569::VIC6569(Logging *pLogging, RpPetra *pGlue)
 {

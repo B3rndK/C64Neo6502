@@ -2,22 +2,7 @@
  * Written by Bernd Krekeler, Herne, Germany
  * 
 */
-
-#include <hardware/gpio.h>
-#include <hardware/adc.h>
-#include <pico/stdlib.h>
-#include <bsp/board_api.h>
-#include <pico/bootrom.h>
-#include <tusb.h>
-#include <dvi.h>
-#include <dvi_serialiser.h>
-#include "logging.hxx"
-#include "rp65c02.hxx"
-#include "cia6526.hxx"
-#include "vic6569.hxx"
-#include "videoOut.hxx"
-#include "rpPetra.hxx"
-#include "computer.hxx"
+#include "stdinclude.hxx"
 
 /*
     Keyboard mappings are incomplete/wrong and have been implemented to at least
