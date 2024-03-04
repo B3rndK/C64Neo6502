@@ -3,19 +3,7 @@
  * Written by Bernd Krekeler, Herne, Germany
  * 
 */
-
-#include <stdlib.h>
-#include <pico/stdlib.h>
-#include <pico/multicore.h>
-#include <dvi.h>
-#include <hardware/vreg.h>
-#include <memory.h>
-#include "logging.hxx"
-#include "rp65c02.hxx"
-#include "cia6526.hxx"
-#include "vic6569.hxx"
-#include "videoOut.hxx"
-#include "rpPetra.hxx"
+#include "stdinclude.hxx"
 
 const int LAST_FRAMEBUFFER_LINE=240;
 

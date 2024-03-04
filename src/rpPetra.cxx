@@ -2,27 +2,9 @@
  * Written by Bernd Krekeler, Herne, Germany
  * 
 */
+#include "stdinclude.hxx"
+#include "roms.hxx"
 
-#include <hardware/gpio.h>
-#include <pico/time.h>
-#include <dvi.h>
-#include <dvi_serialiser.h>
-#include <memory.h>
-#include "logging.hxx"
-#include "rp65c02.hxx"
-#include "cia6526.hxx"
-#include "vic6569.hxx"
-#include "videoOut.hxx"
-#include "rpPetra.hxx"
-#include "computer.hxx"
-#include "monitor.hxx"
-#include "roms/basic.hxx"
-#include "roms/kernal.hxx"
-#include "roms/simons_basic.hxx"
-#include "roms/apfel_0801.hxx"
-
-extern uint8_t chargen_rom[];
-extern uint8_t simons_basic[];
 /* 1:19 at 1,06Mhz , 0:41,51 at 2,04 Mhz (252000kHz), 1:27,85 at 0,985 Mhz, C64 Original: 1:30,51
 
   .org 0xe000
@@ -57,12 +39,15 @@ RpPetra::RpPetra(Logging *pLogging, RP65C02 *pCPU)
     m_pCIA1 = new CIA6526(pLogging, this);
     m_pCIA2 = new CIA6526(pLogging, this);
     m_pVICII= new VIC6569(pLogging, this);
+    m_pKeyboard= new Keyboard(pLogging,this);
     m_pRAM=(uint8_t *)calloc(65536,sizeof(uint8_t));
     m_pRAM[1]=55;
 
 #ifdef _MONITOR_CARTRIDGE
+    // SYS 49152
     memcpy(&m_pRAM[0xc000],mon_c000,sizeof(mon_c000));
 #endif
+
 
 #ifdef _SIMONS_BASIC
     memcpy(&m_pRAM[0x8000],simons_basic,sizeof(simons_basic));
@@ -71,7 +56,14 @@ RpPetra::RpPetra(Logging *pLogging, RP65C02 *pCPU)
     // After Simon's basic is started, enter "old" to recover a little basic program.
     m_pRAM[0x8008]++;
     memcpy(&m_pRAM[0x0801],apfel_0801,sizeof(apfel_0801));
-#endif 
+#else
+
+#ifdef _TRAPDOOR
+     // Internal testmodule only.
+     memcpy(&m_pRAM[0x0801],trapdoor,sizeof(trapdoor));
+#endif
+
+#endif
 
     m_pVideoOut=new VideoOut(pLogging, this, m_pVICII->GetFrameBuffer());
     Reset();

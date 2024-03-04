@@ -16,30 +16,7 @@
  * 6- RESB#
 */
 
-#include <stdio.h>
-#include <hardware/adc.h>
-#include <pico/stdlib.h>
-#include <pico/multicore.h>
-#include <hardware/regs/resets.h>
-#include <hardware/resets.h>
-#include <hardware/vreg.h>
-#include <pico/bootrom.h>
-#include <memory.h>
-#include <dvi.h>
-#include <dvi_serialiser.h>
-#include <bsp/board_api.h>
-#include <tusb.h>
-#include "rp65c02.hxx"
-#include "cia6526.hxx"
-#include "vic6569.hxx"
-#include "terminalBase.hxx"
-#include "ansiTerminal.hxx"
-#include "logging.hxx"
-#include "videoOut.hxx"
-#include "rpPetra.hxx"
-#include "computer.hxx"
-#include "hardware/structs/bus_ctrl.h"
-#include "videoOut.hxx"
+#include "stdinclude.hxx"
 
 #define WAIT_FOR_USB_INIT_TIMEOUT_IN_MS 2000
 
