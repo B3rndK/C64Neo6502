@@ -12,7 +12,7 @@ set(CMAKE_CXX_STANDARD 11)
 
 #set(CMAKE_CXX_FLAGS "-Wall -Wextra")
 #set(CMAKE_CXX_FLAGS_DEBUG "-g -Og")
-set(CMAKE_CXX_FLAGS_DEBUG "-g")
+set(CMAKE_CXX_FLAGS_DEBUG "-g -O0")
 set(CMAKE_CXX_FLAGS_RELEASE "-O3")
 
 include(FetchContent)
@@ -76,7 +76,7 @@ add_compile_definitions(_DEBUG _NO_MONITOR_CARTRIDGE _NO_SIMONS_BASIC _NO_TRAPDO
 # Add pico_stdlib library which aggregates commonly used features
 target_link_libraries(computer pico_stdlib hardware_adc hardware_dma hardware_pio pico_time pico_multicore libdvi tinyusb_host tinyusb_board tinyusb_device)
 
-# enable usb output, disable uart output
+# enable usb output, disable uart out   put
 pico_enable_stdio_usb(computer 0)
 pico_enable_stdio_uart(computer 1)
 
