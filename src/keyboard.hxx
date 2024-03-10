@@ -23,11 +23,12 @@ class Keyboard
     Keyboard (Logging *pLogging, RpPetra *pGlue);
     void OnKeyPressed(uint8_t row, uint8_t col);
     void OnKeyReleased(uint8_t row, uint8_t col);
-    std::vector<Keys> GetKeysPressed();
+    std::vector<Keys *> GetKeysPressed();
 
   private:
-    std::vector<Keys> m_keysPressed;
-
+    std::vector<Keys *> m_keysPressed;
+    Logging *m_pLog;
+    RpPetra *m_pGlue;
 };
 
 

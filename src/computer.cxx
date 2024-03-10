@@ -4,70 +4,33 @@
 */
 #include "stdinclude.hxx"
 
-/*
-    Keyboard mappings are incomplete/wrong and have been implemented to at least
-    be able to test some basic code. Code will later be replaced by real CIA#1 emulation.
 
-*/
+// Y (direction of the keyboard matrix)- ROW
+static const u_int8_t keyboardMapRow[]={0,0,0,0,0xfd,0xf7,0xfb,0xfb,0xfd,0xfb, // 0 (4="A..F")
+                                     0xf7,0xf7,0xef,0xef,0xef,0xdf,0xef,0xef,0xef,0xdf,    // 10 ("G..P")
+                                     0x7f,0xfb,0xfd,0xfb,0xf7,0xf7,0xfd,0xfb,0xf7,0xfd, // 20 ("Q..Z")
+                                     0x7f,0x7f,0xfd,0xfd,0xfb,0xfb,0xf7,0Xf7,0xef,0xef, // 30 ("1..0")
+                                     0xfe,0x7f,0xfe,0x7f,0x7f,0xdf,0xf7,0xdf,0xbf,0xdf, // 40 (41=RS, 44=SPC)
+                                     0,0xdf,0xbf,0x7f,0xdf,0xdf,0xbf,0,0xfe,0xfe, // 50
+                                     0xfe,0xfe,0,0,0,0,0xbf,0xbf,0,0, // 60
+                                     0xbf,0,0,0,0,0,0,0,0,0xfe, // 70
+                                     0xfe,0xfe,0xfe,0,0,0,0,0,0,0, // 80
+                                     0,0,0,0,0,0,0,0,0,0, // 90
+                                     0,0x7f,0,0,0,0,0,0,0,0}; // 100
 
-static const uint8_t _keyboard_mapping[]={0,0,0,0,65,66,67,68,69,70, //0 
-                                     71,72,73,74,75,76,77,78,79,80, // 10
-                                     81,82,83,84,85,86,87,88,89,90, // 20  (Z)
-                                     49,50,51,52,53,54,55,56,57,48, // 30 (1)
-                                     13,0x83,20,58,32,0,19 /* HOME */,41,0,61, //40, 43==CTRL(58)
-                                     0,58,59,0,44,0,0,0,0,0, // 50
-                                     0,0,0,0,0,0,0,0,0,0, // 60
-                                     0,0,0,0,0,0,0,0,0, 29/* CRSR right */, // 70
-                                     157 /* CRSR left */,17 /* CRSR down */,145 /* CRSR up */,0,0,0,0,0,0,0x31, // 80 
-                                     0x32,59,8,11,16,19,24,27,32,35, // 90
-                                     0,0,0,0,0,0,0,0,0,0, // 100
-                                     0,0,0,0,0,0,0,0,0,0, // 110
-                                     0,0,0,0,0,0,0};
+// X (direction of the keyboard matrix)- Columns
+static const u_int8_t keyboardMapCol[]={0,0,0,0,0xfb,0xef,0xef,0xfb,0xbf,0xdf, // 0
+                                     0xfb,0xdf,0xfd,0xfb,0xdf,0xfb,0xef,0x7f,0xbf,0xfd,    // 10
+                                     0xbf,0xfd,0xdf,0xbf,0xbf,0x7f,0xfd,0x7f,0xfd,0xef, // 20
+                                     0xfe,0xf7,0xfe,0xf7,0xfe,0xf7,0xfe,0xf7,0xfe,0xf7, // 30
+                                     0xfd,0x7f,0xfe,0xfb,0xef,0xfe,0xf7,0xbf,0xfd,0x7f, // 40 
+                                     0,0xdf,0xfb,0xfd,0x7f,0xef,0x7f,0,0xef,0xdf, // 50
+                                     0xbf,0xf7,0,0,0,0,0xbf,0xfe,0,0, // 60
+                                     0xf7,0,0,0,0,0,0,0,0,0xfb, // 70
+                                     0xfb,0x7f,0x7f,0,0,0,0,0,0,0, // 80
+                                     0,0,0,0,0,0,0,0,0,0, // 90
+                                     0,0xdf,0,0,0,0,0,0,0,0}; // 100
 
-static const uint8_t _keyboard_mapping_shift[]={0,0,0,0,65,66,67,68,69,70, //0 
-                                     71,72,73,74,75,76,77,78,79,80, // 10
-                                     81,82,83,84,85,86,87,88,89,90, // 20  (Z)
-                                     33,34,35,36,37,38,39,40,41,61, // 30, !
-                                     34,0x83,20,0,32,0,147 /*(CLR/HOME)*/,41,0,0, //40
-                                     0,58,0,0,44,0,0,0,0,0, // 50
-                                     0,0,0,0,0,0,0,0,0,0, // 60
-                                     0,0,0,0,0,0,0,0,0,0, // 70
-                                     0,0,0,0,0,0,0,0,0,0x31, // 80 
-                                     0x32,59,8,11,16,19,24,27,32,35, // 90
-                                     0,0,0,0,0,0,0,0,0,0, // 100
-                                     0,0,0,0,0,0,0,0,0,0, // 110
-                                     0,0,0,0,0,0,0};
-
-
-static const uint8_t _keyboard_mapping_ctrl[]={0,0,0,0,0,0,0,0,0,0, // 0
-                                                0,0,0,0,0,0,0,0,0,0, // 10
-                                                0,0,0,0,0,0,0,0,0,0, // 20 
-                                                0x1c,0x05,28,0x9f,0x9c,30,158,0x0a,0x12,0x92, // 30
-                                                0,0x13,0,0,0,0,0,0,0,0, // 0x13=Home
-                                                0,0,0,0,0,0,0,0,0,0,
-                                                0,0,0,0,0,0,0,0,0,0,
-                                                0,0,0,0,0,0,0,0,0,0,
-                                                0,0,0,0,0,0,0,0,0,0,
-                                                0,0,0,0,0,0,0,0,0,0,
-                                                0,0,0,0,0,0,0,0,0,0,
-                                                0,0,0,0,0,0,0,0,0,0,
-                                                0,0,0,0,0,0,0,0,0,0,
-                                                0,0,0,0,0,0,0,0};
-
-static const uint8_t _keyboard_mapping_commodore[]={0,0,0,0,0,0,0,0,0,0, // 0
-                                                0,0,0,0,0,0,0,0,0,0, // 10
-                                                0,0,0,0,0,0,0,0,0,0, // 20 
-                                                0x1c,0x05,28,0x9f,0x9c,30,158,0x0a,0x12,0x92, // 30
-                                                0,0x13,0,0,0,0,0,0,0,0, // 0x13=Home
-                                                0,0,0,0,0,0,0,0,0,0,
-                                                0,0,0,0,0,0,0,0,0,0,
-                                                0,0,0,0,0,0,0,0,0,0,
-                                                0,0,0,0,0,0,0,0,0,0,
-                                                0,0,0,0,0,0,0,0,0,0,
-                                                0,0,0,0,0,0,0,0,0,0,
-                                                0,0,0,0,0,0,0,0,0,0,
-                                                0,0,0,0,0,0,0,0,0,0,
-                                                0,0,0,0,0,0,0,0};                                                
 
 Computer::Computer(Logging *pLogging)
 {
@@ -85,7 +48,7 @@ int Computer::Run()
   Init();
 
   do {
-    if (m_totalCyles%30000==0)
+    if (m_totalCyles%20000==0)
     {
         tuh_task();
     }
@@ -112,68 +75,37 @@ int Computer::Init()
 }
 
 /**
- * Very basic keyboard processing here just to be able to play around with basic
- * and to get used to tinyUSB.
- * 
+ * Keyboard processing. We do support multiple keys pressed at the same time.
 */
 void process_kbd_report (hid_keyboard_report_t const* report)
 { 
   if (report!=nullptr) 
   {
-    if (report->keycode[0]==0 && report->modifier==0) // No key pressed
+    _pGlue->m_pKeyboard->OnKeyReleased(0,0);
+
+    if (report->modifier==0x02 || report->modifier==0x20)
     {
-      _pGlue->m_pRAM[653]=0x00;
+      // pressed one of the shift keys...
+      if (report->modifier==0x02) { // Left shift key
+        _pGlue->m_pKeyboard->OnKeyPressed(0xfd,0x7f); 
+      }
+      else // right shift key
+      {
+        _pGlue->m_pKeyboard->OnKeyPressed(0xbf,0xef); 
+      }
     }
-    else
+    int i=0;
+    while (report->keycode[i]!=0)
     {
-      if (report->modifier)
+      if (report->keycode[i]==0x40) // F7 => restore.
       {
-        if (report->modifier & 1) // Ctrl key will become Commodore key
-        {
-          _pGlue->m_pRAM[653]|=0x02;  
-          if (_keyboard_mapping_commodore[report->keycode[1]]!=0) 
-          {
-              _pGlue->m_pRAM[631]=_keyboard_mapping_commodore[report->keycode[1]];
-              _pGlue->m_pRAM[198]=1;
-          }
-        }
-        if (report->modifier & 2) // Shift key
-        {
-          _pGlue->m_pRAM[653]|=0x01;
-          if (_keyboard_mapping_shift[report->keycode[0]]!=0)
-          {
-            if (report->keycode[0]!=0) {
-              _pGlue->m_pRAM[631]=_keyboard_mapping_shift[report->keycode[0]];
-              _pGlue->m_pRAM[198]=1;
-            }
-          }
-        }
+        _pGlue->SignalNMI(true);
       }
-      else 
+      else if (report->keycode[i]<sizeof(keyboardMapRow) && keyboardMapRow[report->keycode[i]]!=0)
       {
-        if (report->keycode[0]==43) { // CTRL
-          _pGlue->m_pRAM[653]|=0x04;
-          if (_keyboard_mapping_ctrl[report->keycode[1]]!=0) 
-          {
-            _pGlue->m_pRAM[631]=_keyboard_mapping_ctrl[report->keycode[1]];
-            _pGlue->m_pRAM[198]=1;
-          }
-        }
-        else if (report->keycode[0]==41) // Run/Stop simulation
-        {
-            _pGlue->m_pRAM[631]=0x03;
-            _pGlue->m_pRAM[198]=1;
-            _pGlue->m_pRAM[0x91]=0x7f;
-        }
-        else
-        {
-          if (_keyboard_mapping[report->keycode[0]]!=0)
-          {
-            _pGlue->m_pRAM[631]=_keyboard_mapping[report->keycode[0]];
-            _pGlue->m_pRAM[198]=1;
-          }
-        }
+        _pGlue->m_pKeyboard->OnKeyPressed(keyboardMapRow[report->keycode[i]],keyboardMapCol[report->keycode[i]]); 
       }
+      i++;
     }
   }
 }

@@ -11,10 +11,11 @@ class CIA6526 {
     uint64_t m_i64Clks;
     uint8_t m_registerSet[0x10];    
     uint8_t m_registerSetWrite[0x10];
+    uint8_t m_id;
     RpPetra *m_pGlue;
   
   public:
-    CIA6526(Logging *pLogging, RpPetra *pGlue);
+    CIA6526(Logging *pLogging, uint8_t id, RpPetra *pGlue);
     virtual ~CIA6526();
     void Reset();
     void Clk();

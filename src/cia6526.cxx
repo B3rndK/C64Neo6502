@@ -8,10 +8,12 @@
 
 #include "stdinclude.hxx"
 
-CIA6526::CIA6526(Logging *pLogging, RpPetra *pGlue)
+CIA6526::CIA6526(Logging *pLogging, uint8_t id, RpPetra *pGlue)
 {
     m_pLog=pLogging;
     m_pGlue=pGlue;
+    m_registerSet[0x01]=0xff; // Pull-up setting all high.
+    m_id=id;
 }
 
 CIA6526::~CIA6526() {}
@@ -24,8 +26,7 @@ void CIA6526::Reset()
 void CIA6526::Clk() 
 {
   m_i64Clks++;
-  m_registerSet[0x01]=0xff; // No key pressed.
-
+  
   // size_t const BufferSize = 512;
   //char buffer[BufferSize];
 
@@ -62,6 +63,34 @@ void CIA6526::Clk()
 uint8_t CIA6526::ReadRegister(uint8_t reg) 
 {
   uint8_t ret = m_registerSet[reg];
+  
+  if (m_id==1) // TODO: inherit from CIABase class (CIAA, CIAB) and overwrite method instead of id-comparision.
+  {
+    if (reg==0x01 && m_registerSet[2]==0xff) //  // 0=column (port A, $02 ctrl), 1=row (port B, $03 ctrl)
+    {
+        std::vector<Keys *> keysPressed=m_pGlue->m_pKeyboard->GetKeysPressed();
+        ret=0xff;
+        if (!keysPressed.empty())
+        {        
+            if (m_registerSet[0]==0x00) // C64 is probing if any key has been pressed...
+            {
+              ret=0x20;
+            }
+            else
+            {
+              for(auto keys : keysPressed)
+              {
+                if (keys->row==m_registerSet[0])
+                {
+                  ret&=keys->col;
+                }
+              }
+            }
+        }
+        m_registerSet[1]=ret;
+    }
+  }
+
   if (reg==0x0d)
   {
     if (ret & 0x80)
