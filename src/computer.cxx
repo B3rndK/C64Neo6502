@@ -55,6 +55,25 @@ int Computer::Run()
     {
         tuh_task();
     }
+#ifdef _TRAPDOOR
+    static u_int8_t autostart=0;
+    if (m_totalCyles%2000000==0)
+    {
+        // Joystick present?
+        if (m_pGlue->m_pJoystickA!=nullptr && autostart==0)
+        {
+          const u_int8_t sysTrapdoor[]={'S','Y','S','2','4','6','8','8',13};
+          autostart=1;
+          memcpy(&m_pGlue->m_pRAM[631],sysTrapdoor,sizeof(sysTrapdoor));
+          m_pGlue->m_pRAM[198]=sizeof(sysTrapdoor);
+        }
+    }
+    if (autostart==1 && m_totalCyles%4000000==0)
+    {
+        autostart=2;
+        m_pGlue->m_pKeyboard->OnKeyPressed(0xfd,0xdf); // S
+    }
+#endif
     m_pGlue->Clk(HIGH,&m_systemState);
     m_pGlue->Clk(LOW,&m_systemState);
     m_totalCyles++;
