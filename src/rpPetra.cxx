@@ -40,6 +40,9 @@ RpPetra::RpPetra(Logging *pLogging, RP65C02 *pCPU)
     m_pCIA2 = new CIA6526(pLogging,2, this);
     m_pVICII= new VIC6569(pLogging,this);
     m_pKeyboard= new Keyboard(pLogging,this);
+    m_pJoystickA=nullptr;
+    m_pJoystickB=nullptr;
+
     m_pRAM=(uint8_t *)calloc(65536,sizeof(uint8_t));
     m_pRAM[1]=55;
 

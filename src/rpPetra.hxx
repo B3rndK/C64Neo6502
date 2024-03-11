@@ -46,6 +46,9 @@ class RpPetra {
     CIA6526 *m_pCIA1;
     CIA6526 *m_pCIA2;
     Keyboard *m_pKeyboard;
+    Joysticks *m_pJoystickA;
+    Joysticks *m_pJoystickB; // Not yet.
+
   private:
     RP65C02 *m_pCPU;
     VideoOut *m_pVideoOut;

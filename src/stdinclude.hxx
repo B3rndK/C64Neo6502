@@ -26,6 +26,9 @@
 #include "vic6569.hxx"
 #include "videoOut.hxx"
 #include "keyboard.hxx"
+#include "joysticks.hxx"
+#include "competitionPro.hxx"
+#include "snes.hxx"
 #include "rpPetra.hxx"
 #include "computer.hxx"
 
