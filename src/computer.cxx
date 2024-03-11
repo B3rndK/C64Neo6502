@@ -10,7 +10,7 @@ static const u_int8_t keyboardMapRow[]={0,0,0,0,0xfd,0xf7,0xfb,0xfb,0xfd,0xfb, /
                                      0xf7,0xf7,0xef,0xef,0xef,0xdf,0xef,0xef,0xef,0xdf,    // 10 ("G..P")
                                      0x7f,0xfb,0xfd,0xfb,0xf7,0xf7,0xfd,0xfb,0xf7,0xfd, // 20 ("Q..Z")
                                      0x7f,0x7f,0xfd,0xfd,0xfb,0xfb,0xf7,0Xf7,0xef,0xef, // 30 ("1..0")
-                                     0xfe,0x7f,0xfe,0x7f,0x7f,0xdf,0xf7,0xdf,0xbf,0xdf, // 40 (41=RS, 44=SPC)
+                                     0xfe,0x7f,0xfe,0x7f,0x7f,0xdf,0xf7,0xdf,0xbf,0xbf, // 40 (41=RS, 44=SPC)
                                      0,0xdf,0xbf,0x7f,0xdf,0xdf,0xbf,0,0xfe,0xfe, // 50
                                      0xfe,0xfe,0,0,0,0,0xbf,0xbf,0,0, // 60
                                      0xbf,0,0,0,0,0,0,0,0,0xfe, // 70
@@ -23,7 +23,7 @@ static const u_int8_t keyboardMapCol[]={0,0,0,0,0xfb,0xef,0xef,0xfb,0xbf,0xdf, /
                                      0xfb,0xdf,0xfd,0xfb,0xdf,0xfb,0xef,0x7f,0xbf,0xfd,    // 10
                                      0xbf,0xfd,0xdf,0xbf,0xbf,0x7f,0xfd,0x7f,0xfd,0xef, // 20
                                      0xfe,0xf7,0xfe,0xf7,0xfe,0xf7,0xfe,0xf7,0xfe,0xf7, // 30
-                                     0xfd,0x7f,0xfe,0xfb,0xef,0xfe,0xf7,0xbf,0xfd,0x7f, // 40 
+                                     0xfd,0x7f,0xfe,0xfb,0xef,0xfe,0xf7,0xbf,0xfd,0xdf, // 40 
                                      0,0xdf,0xfb,0xfd,0x7f,0xef,0x7f,0,0xef,0xdf, // 50
                                      0xbf,0xf7,0,0,0,0,0xbf,0xfe,0,0, // 60
                                      0xf7,0,0,0,0,0,0,0,0,0xfb, // 70
@@ -31,6 +31,9 @@ static const u_int8_t keyboardMapCol[]={0,0,0,0,0xfb,0xef,0xef,0xfb,0xbf,0xdf, /
                                      0,0,0,0,0,0,0,0,0,0, // 90
                                      0,0xdf,0,0,0,0,0,0,0,0}; // 100
 
+const char *COMPETITION_PRO="Competition Pro / Speedlink";
+const char *SNES_OEM="SNES (OEM)";
+const char *UNKNOWN_STICK="Unknown Stick/Pad";
 
 Computer::Computer(Logging *pLogging)
 {
@@ -46,9 +49,9 @@ Computer::~Computer()
 int Computer::Run()
 {
   Init();
-
+  tuh_task();
   do {
-    if (m_totalCyles%20000==0)
+    if (m_totalCyles%23000==0)
     {
         tuh_task();
     }
@@ -110,6 +113,44 @@ void process_kbd_report (hid_keyboard_report_t const* report)
   }
 }
 
+const char * identifyJoystick(uint8_t dev_addr, bool& supported)
+{
+  const char *szId="";
+  uint16_t vid, pid;
+
+  tuh_vid_pid_get(dev_addr, &vid, &pid);
+  supported=true;
+ 
+  switch (vid)
+  {
+    case 0x54c:
+      if (pid==0x268)
+      {
+        szId=COMPETITION_PRO;    
+      }
+    break;
+
+    case 0x79:
+      if (pid==0x11)
+      {
+        szId=SNES_OEM;
+      }
+    break;
+
+    default:
+      szId=UNKNOWN_STICK;    
+      supported=false;
+    break;
+  }
+  return szId;
+}
+
+// Invoked when device with hid interface is mounted
+// Report descriptor is also available for use. tuh_hid_parse_report_descriptor()
+// can be used to parse common/simple enough descriptor.
+// Note: if report descriptor length > CFG_TUH_ENUMERATION_BUFSIZE, it will be skipped
+// therefore report_desc = NULL, desc_len = 0
+
 void tuh_hid_mount_cb (uint8_t dev_addr, uint8_t instance,
     uint8_t const* desc_report, uint16_t desc_len)
 {
@@ -119,16 +160,70 @@ void tuh_hid_mount_cb (uint8_t dev_addr, uint8_t instance,
   {
     tuh_hid_receive_report (dev_addr, instance);
   }
+  else
+  {
+    bool supported;
+    const char *pId=identifyJoystick(dev_addr,supported);
+    if (supported) // TODO: Create a class factory. But for now, we only have 2 types
+    {
+      if (strcmp(pId,COMPETITION_PRO)==0)
+      {
+          if (_pGlue->m_pJoystickA!=nullptr)
+          {
+            delete _pGlue->m_pJoystickA;
+          }
+          _pGlue->m_pJoystickA=new CompetitionPro(_pGlue->m_pLog);
+      }
+      else if (strcmp(pId,SNES_OEM)==0)
+      {
+          if (_pGlue->m_pJoystickA!=nullptr)
+          {
+            delete _pGlue->m_pJoystickA;
+          }
+          _pGlue->m_pJoystickA=new SNES(_pGlue->m_pLog);
+      }
+      if (_pGlue->m_pJoystickA!=nullptr)
+      {
+        tuh_hid_receive_report(dev_addr, instance);
+      }
+    }
+  }
 }
 
-void tuh_hid_report_received_cb  (uint8_t dev_addr, uint8_t instance,uint8_t const* report, uint16_t len)
+// Invoked when device with hid interface is un-mounted
+void tuh_hid_umount_cb(uint8_t dev_addr, uint8_t instance)
 {
+
+}
+
+/**
+ * For joysticks, the report differs. I analysed the report for a simple Competition Pro
+ * first, the joystick best known by C64 fellows...
+*/
+void handleJoystick(const char *szJoystick, uint8_t const * report, uint16_t len)
+{
+  _pGlue->m_pJoystickA->Convert(report,len);
+}
+
+void tuh_hid_report_received_cb(uint8_t dev_addr, uint8_t instance,uint8_t const* report, uint16_t len)
+{
+  bool supported;
+  const char *szId;
   switch (tuh_hid_interface_protocol (dev_addr, instance))
   {
     case HID_ITF_PROTOCOL_KEYBOARD:
       process_kbd_report ((hid_keyboard_report_t const*) report);
       tuh_hid_receive_report (dev_addr, instance);
     break;
+
+    default:
+      szId=identifyJoystick(dev_addr, supported);
+      if (supported)
+      {
+        handleJoystick(szId, report, len);
+        tuh_hid_receive_report(dev_addr, instance);
+      }
+    break;
   }
-}
+}  
 

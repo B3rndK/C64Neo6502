@@ -33,6 +33,7 @@ class Computer {
 
     int m_WaitCycles;
     uint64_t m_totalCyles;
+
   private:
     
     SYSTEMSTATE m_systemState;

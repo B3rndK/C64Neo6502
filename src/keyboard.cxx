@@ -35,7 +35,6 @@ void Keyboard::OnKeyReleased(uint8_t row, uint8_t col)
   {
     m_keysPressed.clear();
   }
-  
 }
 
 std::vector<Keys *> Keyboard::GetKeysPressed()

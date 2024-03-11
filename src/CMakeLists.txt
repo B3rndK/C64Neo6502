@@ -57,7 +57,6 @@ include_directories(
 )
 
 # rest of your project 
-
 add_executable(computer
   videoOut.cxx
   main.cxx
@@ -67,6 +66,9 @@ add_executable(computer
   cia6526.cxx
   rpPetra.cxx
   computer.cxx
+  joysticks.cxx
+  snes.cxx
+  competitionPro.cxx
   keyboard.cxx
 )
 

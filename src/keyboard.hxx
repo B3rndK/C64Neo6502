@@ -13,6 +13,21 @@ struct Keys{
   uint8_t col;
 };
 
+// We will make it easy to support different joysticks using a simple bitfield
+struct JoystickStatus {
+  u_int8_t port:1; // 0=port 1, 1=port 2
+  u_int8_t up:1; // 0- pushed, 1=not pushed
+  u_int8_t down:1;
+  u_int8_t left:1;
+  u_int8_t right:1;
+  u_int8_t fire:1;
+};
+#define PRESSED 0
+#define NOT_PRESSED 1
+
+#define PORT_1 0
+#define PORT_2 1
+
 /**
  * We use a list of keys in hope that the USB interface makes it possible
  * to distinguish multiple keys pressed at the same time.
