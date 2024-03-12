@@ -701,12 +701,10 @@ void VIC6569::Clk()
       if (irqAtScanline==m_currentScanLine)
       {
         // Indicate raster match
-        m_registerSetWrite[0x19]|=0x01;
-        // Now check if we need to signal an IRQ due to vertical line count
-        if (m_registerSetWrite[0x1a] & 0x01) 
-        {
-          m_pGlue->SignalIRQ(true); 
-        }
+        m_registerSetWrite[0x19]|=0x81;
+        m_registerSetRead[0x19]|=0x81;
+        _pGlue->SignalNMI(false);
+        _pGlue->SignalNMI(true);
       }
     }
     if (currentFrame==frameNoToRefresh || frameNoToRefresh==1)
