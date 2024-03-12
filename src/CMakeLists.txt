@@ -73,7 +73,8 @@ add_executable(computer
 )
 
 # Comment in for release version 
-add_compile_definitions(_DEBUG _NO_MONITOR_CARTRIDGE _NO_SIMONS_BASIC _NO_TRAPDOOR)
+# _NMISTART => Start ROM using the Restore Key (F7)
+add_compile_definitions(_DEBUG _NO_MONITOR_CARTRIDGE _NO_SIMONS_BASIC _TRAPDOOR _NO_ELITE _NO_NMISTART)
 
 # Add pico_stdlib library which aggregates commonly used features
 target_link_libraries(computer pico_stdlib hardware_adc hardware_dma hardware_pio pico_time pico_multicore libdvi tinyusb_host tinyusb_board tinyusb_device)

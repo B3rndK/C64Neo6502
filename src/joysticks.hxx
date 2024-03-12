@@ -5,7 +5,7 @@
 class Joysticks
 {
   public:
-    Joysticks(Logging *pLogging, u_int8_t port=PORT_2);
+    Joysticks(Logging *pLogging, uint8_t port=PORT_2);
     virtual ~Joysticks();
     // Only method to be implemented for more joysticks.
     virtual void Convert(uint8_t const * report, uint16_t len) = 0;

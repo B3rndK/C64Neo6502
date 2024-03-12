@@ -23,11 +23,6 @@ class Computer {
     // We need a custom chip for graphics
     // Sabrina *m_pSabrina;
 
-    // We need some (EEP)ROM
-    //RP_ROM *m_pROM;
-    // We need some RAM...
-    uint8_t *m_pRAM;
-
     // Petra, our custom chip keeping it all together
     RpPetra *m_pGlue;
 
