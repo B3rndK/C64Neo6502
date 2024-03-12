@@ -15,12 +15,12 @@ struct Keys{
 
 // We will make it easy to support different joysticks using a simple bitfield
 struct JoystickStatus {
-  u_int8_t port:1; // 0=port 1, 1=port 2
-  u_int8_t up:1; // 0- pushed, 1=not pushed
-  u_int8_t down:1;
-  u_int8_t left:1;
-  u_int8_t right:1;
-  u_int8_t fire:1;
+  uint8_t port:1; // 0=port 1, 1=port 2
+  uint8_t up:1; // 0- pushed, 1=not pushed
+  uint8_t down:1;
+  uint8_t left:1;
+  uint8_t right:1;
+  uint8_t fire:1;
 };
 #define PRESSED 0
 #define NOT_PRESSED 1

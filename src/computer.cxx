@@ -4,9 +4,12 @@
 */
 #include "stdinclude.hxx"
 
+#ifdef _ELITE
+extern uint8_t elite[];
+#endif 
 
 // Y (direction of the keyboard matrix)- ROW
-static const u_int8_t keyboardMapRow[]={0,0,0,0,0xfd,0xf7,0xfb,0xfb,0xfd,0xfb, // 0 (4="A..F")
+static const uint8_t keyboardMapRow[]={0,0,0,0,0xfd,0xf7,0xfb,0xfb,0xfd,0xfb, // 0 (4="A..F")
                                      0xf7,0xf7,0xef,0xef,0xef,0xdf,0xef,0xef,0xef,0xdf,    // 10 ("G..P")
                                      0x7f,0xfb,0xfd,0xfb,0xf7,0xf7,0xfd,0xfb,0xf7,0xfd, // 20 ("Q..Z")
                                      0x7f,0x7f,0xfd,0xfd,0xfb,0xfb,0xf7,0Xf7,0xef,0xef, // 30 ("1..0")
@@ -19,7 +22,7 @@ static const u_int8_t keyboardMapRow[]={0,0,0,0,0xfd,0xf7,0xfb,0xfb,0xfd,0xfb, /
                                      0,0x7f,0,0,0,0,0,0,0,0}; // 100
 
 // X (direction of the keyboard matrix)- Columns
-static const u_int8_t keyboardMapCol[]={0,0,0,0,0xfb,0xef,0xef,0xfb,0xbf,0xdf, // 0
+static const uint8_t keyboardMapCol[]={0,0,0,0,0xfb,0xef,0xef,0xfb,0xbf,0xdf, // 0
                                      0xfb,0xdf,0xfd,0xfb,0xdf,0xfb,0xef,0x7f,0xbf,0xfd,    // 10
                                      0xbf,0xfd,0xdf,0xbf,0xbf,0x7f,0xfd,0x7f,0xfd,0xef, // 20
                                      0xfe,0xf7,0xfe,0xf7,0xfe,0xf7,0xfe,0xf7,0xfe,0xf7, // 30
@@ -55,25 +58,18 @@ int Computer::Run()
     {
         tuh_task();
     }
-#ifdef _TRAPDOOR
-    static u_int8_t autostart=0;
-    if (m_totalCyles%2000000==0)
-    {
-        // Joystick present?
-        if (m_pGlue->m_pJoystickA!=nullptr && autostart==0)
-        {
-          const u_int8_t sysTrapdoor[]={'S','Y','S','2','4','6','8','8',13};
-          autostart=1;
-          memcpy(&m_pGlue->m_pRAM[631],sysTrapdoor,sizeof(sysTrapdoor));
-          m_pGlue->m_pRAM[198]=sizeof(sysTrapdoor);
-        }
-    }
-    if (autostart==1 && m_totalCyles%4000000==0)
-    {
-        autostart=2;
-        m_pGlue->m_pKeyboard->OnKeyPressed(0xfd,0xdf); // S
-    }
+
+#ifdef _ELITE
+  static uint8_t elite_start=0;
+  if ((m_totalCyles+1)%2000000==0 && elite_start==0)
+  {
+    elite_start=1;
+    memcpy(&m_pGlue->m_pRAM[0x02],elite,65534);
+    m_pGlue->SignalIRQ(false);
+    m_pGlue->SignalIRQ(true);
+  }
 #endif
+
     m_pGlue->Clk(HIGH,&m_systemState);
     m_pGlue->Clk(LOW,&m_systemState);
     m_totalCyles++;
@@ -121,6 +117,7 @@ void process_kbd_report (hid_keyboard_report_t const* report)
     {
       if (report->keycode[i]==0x40) // F7 => restore.
       {
+        _pGlue->SignalNMI(false);
         _pGlue->SignalNMI(true);
       }
       else if (report->keycode[i]<sizeof(keyboardMapRow) && keyboardMapRow[report->keycode[i]]!=0)

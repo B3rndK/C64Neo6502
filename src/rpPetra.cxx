@@ -4,7 +4,6 @@
 */
 #include "stdinclude.hxx"
 #include "roms.hxx"
-
 /* 1:19 at 1,06Mhz , 0:41,51 at 2,04 Mhz (252000kHz), 1:27,85 at 0,985 Mhz, C64 Original: 1:30,51
 
   .org 0xe000
@@ -53,21 +52,20 @@ RpPetra::RpPetra(Logging *pLogging, RP65C02 *pCPU)
 
 
 #ifdef _SIMONS_BASIC
-    memcpy(&m_pRAM[0x8000],simons_basic,sizeof(simons_basic));
-    // Prevent autostart by changing 'CBM80' => 'CBM81'.
-    // Needs to be repoked back to 48 by a poke 32776,48 and then sys64738 to start the module
-    // After Simon's basic is started, enter "old" to recover a little basic program.
-    m_pRAM[0x8008]++;
-    memcpy(&m_pRAM[0x0801],apfel_0801,sizeof(apfel_0801));
+  memcpy(&m_pRAM[0x8000],simons_basic,sizeof(simons_basic));
+  // Prevent autostart by changing 'CBM80' => 'CBM81'.
+  // Needs to be repoked back to 48 by a poke 32776,48 and then sys64738 to start the module
+  // After Simon's basic is started, enter "old" to recover a little basic program.
+  m_pRAM[0x8008]++;
+  memcpy(&m_pRAM[0x0801],apfel_0801,sizeof(apfel_0801));
 #else
 
 #ifdef _TRAPDOOR
-     // Internal testmodule only.
-     memcpy(&m_pRAM[0x0801],trapdoor,sizeof(trapdoor));
+  // Internal testmodule only.
+  memcpy(&m_pRAM[0x0801],trapdoor,sizeof(trapdoor));
 #endif
 
 #endif
-
     m_pVideoOut=new VideoOut(pLogging, this, m_pVICII->GetFrameBuffer());
     Reset();
 }
@@ -287,15 +285,50 @@ void RpPetra::Clk(bool isRisingEdge, SYSTEMSTATE *pSystemState)
     {
         if (pSystemState->cpuState.readNotWrite)  // READ 
         {
-          if (IsKernalRomVisible())                  
+#ifdef _NMISTART
+          static int nmiStage=0;  
+          bool done=false;
+          if ((addr==0xfffa || addr==0xfffb) && nmiStage<=2)
           {
-            // Character ROM
-            WriteDataBus(kernal_rom[addr-0xe000]);
+#ifdef _ELITE
+            uint8_t magic[]={0x68,0x68,0x68,0xa9,0x40,0x48,0xa9,0x00,0x48,0x08,0x40}; 
+#endif            
+#ifdef _TRAPDOOR      
+            uint8_t magic[]={0x68,0x68,0x68,0xa9,0x60,0x48,0xa9,0x70,0x48,0x08,0x40}; 
+#endif            
+            if (nmiStage==0)
+            {
+              memcpy(&m_pRAM[0x00ff],magic,sizeof(magic));
+            }
+            if (nmiStage<=2)
+            {
+                nmiStage++;
+                if (addr==0xfffa)
+                {
+                  WriteDataBus(0xff);    
+                  done=true;
+                }
+                else
+                {
+                  WriteDataBus(0x00);    
+                  done=true;
+                }
+            }   
           }
-          else
+          if (!done)  
           {
-            WriteDataBus(m_pRAM[addr]);
+#endif            
+            if (IsKernalRomVisible())                  
+            {
+              WriteDataBus(kernal_rom[addr-0xe000]);
+            }
+            else
+            {
+              WriteDataBus(m_pRAM[addr]);
+            }
+#ifdef _NMISTART
           }
+#endif          
         }
         else
         {

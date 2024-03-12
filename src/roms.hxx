@@ -13,5 +13,8 @@
 #endif
 #ifdef _TRAPDOOR
 #include "roms/trapdoor.hxx"
-#endif 
+#endif
+#ifdef _ELITE
+#include "roms/elite.hxx" 
+#endif
 #endif

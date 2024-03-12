@@ -58,7 +58,6 @@ class RpPetra {
     void Enable_U6_only() { gpio_put_masked(pioMaskOE_U5_U6_U7, enableU6Only); };  
     void Enable_U7_only() { gpio_put_masked(pioMaskOE_U5_U6_U7, enableU7Only); };  
     void DisableBus()     { gpio_put_masked(pioMaskOE_U5_U6_U7, disableU5U6U7);}
-    void ResetCPU();
     void ClockCPU(int counter);
     void PHI2(bool isRisingEdge) { gpio_put(CLK,isRisingEdge);}
     inline void WriteDataBus(uint8_t byte);
@@ -80,7 +79,7 @@ class RpPetra {
     virtual ~RpPetra();
     void Reset();
     void UpdateScreen();
-        
+    void ResetCPU();        
 };
 
 #endif
