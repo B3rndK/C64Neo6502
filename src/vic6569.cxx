@@ -79,7 +79,7 @@ void VIC6569::HandleExtendedColorMode()
       int offset=curRow*40+i;
       
       uint8_t characterInVideoRam=m_pGlue->m_pRAM[videoRam+offset];
-      uint8_t foregroundColor=m_pGlue->m_pRAM[0xd800+offset] & 0x0f;
+      uint8_t foregroundColor=m_pGlue->m_pColorRam[offset] & 0x0f;
       backgroundColor=backgroundColors[characterInVideoRam/64];
       characterInVideoRam%=64;
      
@@ -198,7 +198,7 @@ void VIC6569::HandleMulticolorTextMode()
         bits=m_pGlue->m_pRAM[vicBaseAddress+characterRamOffset+(8*characterInVideoRam)+((m_currentScanLine-(END_SCANLINE_UPPER_BORDER_PAL+1)) % 8)];
       }
       
-      uint8_t color3=m_pGlue->m_pRAM[0xd800+(curRow*40+i)] % 0b00001111; // 11
+      uint8_t color3=m_pGlue->m_pColorRam[curRow*40+i] % 0b00001111; // 11
 
       if (color3 & 8)
       {
@@ -332,9 +332,8 @@ void VIC6569::HandleStandardTextMode()
         bits=m_pGlue->m_pRAM[vicBaseAddress+characterRamOffset+(8*characterInVideoRam)+((m_currentScanLine-(END_SCANLINE_UPPER_BORDER_PAL+1)) % 8)];
       }
 
-      uint8_t foregroundColor=m_pGlue->m_pRAM[0xd800+offset] & 0x0f;
+      uint8_t foregroundColor=m_pGlue->m_pColorRam[offset] & 0x0f;
       uint8_t backgroundColor=m_registerSetRead[0x21] & 0x0f;
-    
       
       if (bits & 0x80)
       {
@@ -609,7 +608,7 @@ void VIC6569::HandleMulticolorBitmapMode()
     {
       uint8_t color1=(m_pGlue->m_pRAM[vicBaseAddr+videoRamAddrOffset+(curRow*40+i)] & 0b11110000) >> 4; // 01
       uint8_t color2=m_pGlue->m_pRAM[vicBaseAddr+videoRamAddrOffset+(curRow*40+i)] & 0b00001111; // 10
-      uint8_t color3=m_pGlue->m_pRAM[0xd800+(curRow*40+i)] & 0b00001111; // 11
+      uint8_t color3=m_pGlue->m_pColorRam[curRow*40+i] & 0b00001111; // 11
 
 
       if (vicBaseAddr==0x0000 || vicBaseAddr==0x8000) // Bank 0,2

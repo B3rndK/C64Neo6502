@@ -39,6 +39,7 @@ RpPetra::RpPetra(Logging *pLogging, RP65C02 *pCPU)
     m_pCIA2 = new CIA6526(pLogging,2, this);
     m_pVICII= new VIC6569(pLogging,this);
     m_pKeyboard= new Keyboard(pLogging,this);
+    m_pColorRam= (uint8_t *)calloc(1000,sizeof(uint8_t));
     m_pJoystickA=nullptr;
     m_pJoystickB=nullptr;
 
@@ -73,6 +74,11 @@ RpPetra::RpPetra(Logging *pLogging, RP65C02 *pCPU)
                        0xdc,0x58,0x4c,0x31,0xea,0xee,0x21,0xd0,0xce,0x21,0xd0,0x8d,0x19,0xd0,
                        0x68,0xa8,0x68,0xaa,0x68,0x40};  
   memcpy(&m_pRAM[0xc000],rasterIrq,sizeof(rasterIrq));
+#endif
+
+#ifdef _ELITE
+  memcpy(&m_pRAM[0x4000],elite_pic_4000,sizeof(elite_pic_4000));
+  memcpy(&m_pRAM[0xc000],picldr_c000,sizeof(picldr_c000));
 #endif
 
 
@@ -236,6 +242,31 @@ void RpPetra::Clk(bool isRisingEdge, SYSTEMSTATE *pSystemState)
       }
       //m_pLog->LogInfo({szBuffer});
     }
+    else if (addr>=0xd800 && addr<=0xdbe7) // Colorram
+    {
+      handled=true;
+      if (IsIOVisible())
+      {
+        if (pSystemState->cpuState.readNotWrite) {   // READ access in colorram
+          WriteDataBus(m_pColorRam[addr-0xd800]);
+        }
+        else // write to colorram
+        {
+          WriteDataBus(m_pRAM[addr]);
+          m_pColorRam[addr-0xd800]=pSystemState->cpuState.d0d7;
+        }
+      }
+      else
+      {
+        if (pSystemState->cpuState.readNotWrite) {   // READ access from regular RAM
+          WriteDataBus(m_pRAM[addr]);
+        }
+        else // write to regular RAM
+        {
+          m_pRAM[addr]=pSystemState->cpuState.d0d7;
+        }
+      }
+    }
     else if (addr>=0xdd00 && addr<=0xddff && IsIOVisible()) // CIA-2
     {
       handled=true;
@@ -305,10 +336,11 @@ void RpPetra::Clk(bool isRisingEdge, SYSTEMSTATE *pSystemState)
 #ifdef _NMISTART
           static int nmiStage=0;  
           bool done=false;
-          if ((addr==0xfffa || addr==0xfffb) && nmiStage<=2)
+          if ((addr==0xfffa || addr==0xfffb) && nmiStage<=4)
           {
 #ifdef _ELITE
-            uint8_t magic[]={0x68,0x68,0x68,0xa9,0x40,0x48,0xa9,0x00,0x48,0x08,0x40}; 
+            uint8_t magic[]={0x68,0x68,0x68,0xa9,0xC0,0x48,0xa9,0x00,0x48,0x08,0x40};  // $C000
+            uint8_t magic_run[]={0x68,0x68,0x68,0xa9,0x01,0x48,0xa9,0xb6,0x48,0x08,0x40};  // $01B6
 #endif            
 #ifdef _TRAPDOOR      
             uint8_t magic[]={0x68,0x68,0x68,0xa9,0x60,0x48,0xa9,0x70,0x48,0x08,0x40}; 
@@ -316,8 +348,20 @@ void RpPetra::Clk(bool isRisingEdge, SYSTEMSTATE *pSystemState)
             if (nmiStage==0)
             {
               memcpy(&m_pRAM[0x00ff],magic,sizeof(magic));
+#ifdef _ELITE
+              memcpy(&m_pRAM[0x4000],elite_pic_4000,sizeof(elite_pic_4000));
+              memcpy(&m_pRAM[0xc000],picldr_c000,sizeof(picldr_c000));
+              memcpy(m_pColorRam,elite_d800,sizeof(elite_d800));
+#endif              
             }
-            if (nmiStage<=2)
+#ifdef _ELITE            
+            else if (nmiStage==2)
+            {
+                memcpy(&m_pRAM[0x02],elite,sizeof(elite));
+                memcpy(&m_pRAM[0x00ff],magic_run,sizeof(magic_run));
+            }
+#endif
+            if (nmiStage<=4)
             {
                 nmiStage++;
                 if (addr==0xfffa)
