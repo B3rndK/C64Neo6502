@@ -5,7 +5,8 @@
 #include "stdinclude.hxx"
 
 #ifdef _ELITE
-extern uint8_t elite[];
+extern uint8_t elite[65534];
+extern uint8_t elite_d800[1000];
 #endif 
 
 // Y (direction of the keyboard matrix)- ROW
@@ -58,17 +59,6 @@ int Computer::Run()
     {
         tuh_task();
     }
-
-#ifdef _ELITE
-  static uint8_t elite_start=0;
-  if ((m_totalCyles+1)%2000000==0 && elite_start==0)
-  {
-    elite_start=1;
-    memcpy(&m_pGlue->m_pRAM[0x02],elite,65534);
-    m_pGlue->SignalIRQ(false);
-    m_pGlue->SignalIRQ(true);
-  }
-#endif
 
     m_pGlue->Clk(HIGH,&m_systemState);
     m_pGlue->Clk(LOW,&m_systemState);
