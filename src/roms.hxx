@@ -7,6 +7,9 @@
 #ifdef _MONITOR_CARTRIDGE
 #include "roms/monitor.hxx"
 #endif
+#ifdef _FLASHDANCE
+#include "roms/flashdance.hxx"
+#endif
 #ifdef _SIMONS_BASIC
 #include "roms/simons_basic.hxx"
 #include "roms/apfel_0801.hxx"
