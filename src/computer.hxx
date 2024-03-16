@@ -27,10 +27,12 @@ class Computer {
     RpPetra *m_pGlue;
 
     int m_WaitCycles;
-    uint64_t m_totalCyles;
+
+    uint64_t inline GetTotalCycles() { return m_totalCyles;}
 
   private:
     
+    uint64_t m_totalCyles;    
     SYSTEMSTATE m_systemState;
     repeating_timer_t m_CpuClkTimerInfo;
     

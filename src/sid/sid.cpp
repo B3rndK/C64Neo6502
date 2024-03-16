@@ -1220,8 +1220,7 @@ void osid_calc_gains(osid_t *sid, bool is_left_sid, bool is_right_sid)
 }
 
 // Fast pseudo-random number generator
-extern uint32 f_rand_seed;
-
+uint32 f_rand_seed = 1;
 inline static uint8 f_rand()
 {
     f_rand_seed = f_rand_seed * 1103515245 + 12345;

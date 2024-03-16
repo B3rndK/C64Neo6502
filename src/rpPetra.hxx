@@ -71,7 +71,7 @@ class RpPetra {
   public:
     bool m_screenUpdated;
 
-    void Clk(bool isRisingEdge, SYSTEMSTATE *pSystemState);
+    void Clk(bool isRisingEdge, SYSTEMSTATE *pSystemState, uint64_t totalCycles);
     RpPetra(Logging *pLogging, RP65C02 *pCpu);
     void SignalIRQ(bool enable);
     void SignalNMI(bool enable);
