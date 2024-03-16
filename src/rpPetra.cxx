@@ -25,6 +25,8 @@
 
 */
 
+#define SOUND_PIN 20
+
 // static uint8_t benchmark[]={0xA9, 0x00, 0xAA, 0xA8, 0xE8, 0xD0, 0xFD,0xC8,0xD0,0xFA,0xAA,0xE8,0x8A,0xC9,0xFF,0xD0,0xF3,0x8D,0x20,0xD0,0x4C,0x04,0xE0};
 
 static char Charset[]={ '@','A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z',
@@ -87,6 +89,50 @@ RpPetra::RpPetra(Logging *pLogging, RP65C02 *pCPU)
     Reset();
 }
 
+/*
+  The following two procedures are taken from https://github.com/paulscottrobson/neo6502-firmware
+  and were written by Paul Robson (paul@robsons.org.uk) and Harry Fairhead.
+*/
+
+void pwm_interrupt_handler() {
+  static uint16_t buffer;
+  pwm_clear_irq(pwm_gpio_to_slice_num(SOUND_PIN));
+  SIDCalcBuffer((uint8_t*)&buffer, 2);
+  pwm_set_gpio_level(SOUND_PIN, buffer);
+}
+
+void SNDInitialise(void) {
+  SIDInit();
+  gpio_set_function(SOUND_PIN, GPIO_FUNC_PWM);
+  int audio_pin_slice = pwm_gpio_to_slice_num(SOUND_PIN);
+
+  // Setup PWM interrupt to fire when PWM cycle is complete
+  pwm_clear_irq(audio_pin_slice);
+  pwm_set_irq_enabled(audio_pin_slice, true);
+  // set the handle function above
+  irq_set_exclusive_handler(PWM_IRQ_WRAP, pwm_interrupt_handler); 
+  irq_set_enabled(PWM_IRQ_WRAP, true);
+
+  // Setup PWM for audio output
+  pwm_config config = pwm_get_default_config();
+  /* Base clock 176,000,000 Hz divide by wrap 250 then the clock divider further divides
+    * to set the interrupt rate. 
+    * 
+    * 11 KHz is fine for speech. Phone lines generally sample at 8 KHz
+    * 
+    * 
+    * So clkdiv should be as follows for given sample rate
+    *  8.0f for 11 KHz
+    *  4.0f for 22 KHz
+    *  2.0f for 44 KHz etc
+    */
+    pwm_config_set_clkdiv(&config, 23.0f); 
+    pwm_config_set_wrap(&config, 250); 
+    pwm_init(audio_pin_slice, &config, true);
+    pwm_set_gpio_level(SOUND_PIN, 0);
+}
+
+
 RpPetra::~RpPetra()
 {
 }
@@ -110,9 +156,9 @@ void RpPetra::Reset()
   m_pCIA2->Reset();  
   m_pVideoOut->Reset();
   SIDReset(0);
+  ::SNDInitialise();
   ResetCPU();
 }
-
 
 // Note: According to the WDC the IRQB low level should be held until the interrupt handler clears 
 // the interrupt request source.
@@ -220,10 +266,10 @@ void RpPetra::Clk(bool isRisingEdge, SYSTEMSTATE *pSystemState, uint64_t totalCy
     {
       handled=true;
       if (pSystemState->cpuState.readNotWrite) {   // READ access
-        sid_read((uint32_t)addr-0xd000, (cycle_t)totalCycles);
+        sid_read((uint32_t)addr-0xd400, (cycle_t)totalCycles);
       }
       else {
-        sid_write((uint32_t)addr-0xd000,pSystemState->cpuState.d0d7);
+        sid_write((uint32_t)addr-0xd400,pSystemState->cpuState.d0d7);
       }
     } 
     else if (addr>=0xd000 && addr<=0xd02e && IsIOVisible()) // VIC II
