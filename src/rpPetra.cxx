@@ -35,10 +35,10 @@ RpPetra::RpPetra(Logging *pLogging, RP65C02 *pCPU)
 {
     m_pLog=pLogging;
     m_pCPU=pCPU;
-    m_pCIA1 = new CIA6526(pLogging,1, this);
-    m_pCIA2 = new CIA6526(pLogging,2, this);
+    m_pCIA1 = new CIA1(pLogging,this);
+    m_pCIA2 = new CIA2(pLogging,this);
     m_pVICII= new VIC6569(pLogging,this);
-    m_pKeyboard= new Keyboard(pLogging,this);
+    m_pKeyboard= new Keyboard(pLogging, this);
     m_pColorRam= (uint8_t *)calloc(1000,sizeof(uint8_t));
     m_pJoystickA=nullptr;
     m_pJoystickB=nullptr;
@@ -228,6 +228,17 @@ void RpPetra::Clk(bool isRisingEdge, SYSTEMSTATE *pSystemState)
       }
       //m_pLog->LogInfo({szBuffer});
     }
+    else if (addr>=0xd000 && addr<=0xdfff && IsCharRomVisible())
+    {
+      handled=true;
+      if (pSystemState->cpuState.readNotWrite) {   // READ access
+        WriteDataBus(chargen_rom[addr-0xd000]);
+      }
+      else
+      {
+        WriteDataBus(m_pRAM[addr]);
+      }
+    }
     else if (addr>=0xdc00 && addr<=0xdcff && IsIOVisible()) // CIA-1
     {   
       handled=true;
@@ -282,21 +293,13 @@ void RpPetra::Clk(bool isRisingEdge, SYSTEMSTATE *pSystemState)
       //m_pLog->LogInfo({szBuffer});
     }
   }
-  if (!handled)
+  if (!handled) // Regular RAM access
   {
-    if (addr>=0xd000 && addr<=0xdfff)
+    if (addr>=0xd000 && addr<=0xdfff && !IsIOVisible())
     {
         if (pSystemState->cpuState.readNotWrite)  // READ 
         {
-          if (IsCharRomVisible())                  
-          {
-            // Character ROM
-            WriteDataBus(chargen_rom[addr-0xd000]);
-          }
-          else
-          {
-            WriteDataBus(m_pRAM[addr]);
-          }
+          WriteDataBus(m_pRAM[addr]);
         }
         else
         {

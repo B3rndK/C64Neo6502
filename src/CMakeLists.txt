@@ -64,6 +64,8 @@ add_executable(computer
   rp65c02.cxx 
   vic6569.cxx
   cia6526.cxx
+  cia1.cxx
+  cia2.cxx
   rpPetra.cxx
   computer.cxx
   joysticks.cxx
