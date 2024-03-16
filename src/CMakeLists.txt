@@ -66,6 +66,7 @@ add_executable(computer
   cia6526.cxx
   cia1.cxx
   cia2.cxx
+  sid/sid.cpp
   rpPetra.cxx
   computer.cxx
   joysticks.cxx
