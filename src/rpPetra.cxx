@@ -109,6 +109,7 @@ void RpPetra::Reset()
   m_pCIA1->Reset();  
   m_pCIA2->Reset();  
   m_pVideoOut->Reset();
+  SIDReset(0);
   ResetCPU();
 }
 
@@ -185,7 +186,7 @@ bool RpPetra::IsCharRomVisible()
 
 // In this design we use Petra's CLK == 65C02 PHI2. We may later decide
 // to use some kind of interleave factor x.
-void RpPetra::Clk(bool isRisingEdge, SYSTEMSTATE *pSystemState)
+void RpPetra::Clk(bool isRisingEdge, SYSTEMSTATE *pSystemState, uint64_t totalCycles)
 {
   int_fast16_t addr;
   //static char szBuffer[256];
@@ -214,7 +215,18 @@ void RpPetra::Clk(bool isRisingEdge, SYSTEMSTATE *pSystemState)
   }
   else if (IsIOVisible())
   {
-    if (addr>=0xd000 && addr<=0xd02e && IsIOVisible()) // VIC II
+
+    if (addr>=0xd400 && addr<=0xd41c && IsIOVisible()) // SID6581/6582/8580
+    {
+      handled=true;
+      if (pSystemState->cpuState.readNotWrite) {   // READ access
+        sid_read((uint32_t)addr-0xd000, (cycle_t)totalCycles);
+      }
+      else {
+        sid_write((uint32_t)addr-0xd000,pSystemState->cpuState.d0d7);
+      }
+    } 
+    else if (addr>=0xd000 && addr<=0xd02e && IsIOVisible()) // VIC II
     {
       handled=true;
       if (pSystemState->cpuState.readNotWrite) {   // READ access
@@ -222,11 +234,8 @@ void RpPetra::Clk(bool isRisingEdge, SYSTEMSTATE *pSystemState)
         WriteDataBus(m_pVICII->m_registerSetRead[addr-0xd000]);
       }
       else {
-        //sprintf (szBuffer,"VIC-II write access: %04x,%02x\n",addr,pSystemState->cpuState.d0d7);
         m_pVICII->WriteRegister(addr-0xd000,pSystemState->cpuState.d0d7);
-        m_screenUpdated=true;
       }
-      //m_pLog->LogInfo({szBuffer});
     }
     else if (addr>=0xd000 && addr<=0xdfff && IsCharRomVisible())
     {

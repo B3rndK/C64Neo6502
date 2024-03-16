@@ -60,8 +60,8 @@ int Computer::Run()
         tuh_task();
     }
 
-    m_pGlue->Clk(HIGH,&m_systemState);
-    m_pGlue->Clk(LOW,&m_systemState);
+    m_pGlue->Clk(HIGH,&m_systemState,m_totalCyles);
+    m_pGlue->Clk(LOW,&m_systemState,m_totalCyles);
     m_totalCyles++;
   } while (1);
 
@@ -72,13 +72,13 @@ int Computer::Init()
 {
   board_init();
   tusb_init();  
+  SIDInit();
 
+  _pGlue=m_pGlue;
   // Create the CPU
   m_pCPU= new RP65C02(m_pLogging);
   // Create the Petra custom chip (glue logic)
   m_pGlue= new RpPetra(m_pLogging, m_pCPU);
-  _pGlue=m_pGlue;
-
   return 0;
 }
 

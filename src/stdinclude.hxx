@@ -26,6 +26,7 @@
 #include "cia1.hxx"
 #include "cia2.hxx"
 #include "vic6569.hxx"
+#include "sid/sid.h"
 #include "videoOut.hxx"
 #include "keyboard.hxx"
 #include "joysticks.hxx"
