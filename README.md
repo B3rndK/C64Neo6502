@@ -59,7 +59,7 @@ I included a small machine code monitor at $c000 (`SYS 49152`).
 You can enable this module within the `CMakeLists.txt`. It is switched off by default.
 
 ## Sound
-There is no sound yet.
+Source Code of TinySid is now included but it is WIP.
 
 ## Output
 DVI output is now implemented for all official C-64 VIC modes, textmode, multicolor textmode, hires, hires multicolor and extended color mode (ECM) . The design also supports fli support. No support for sprites or bitscrolling yet. The resolution used is a "quirk mode" of 340x240 and may not run on every display. You can enforce using a 640x480 mode by changing a single line of code in case you prefer a more safe timing.
