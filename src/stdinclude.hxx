@@ -23,6 +23,8 @@
 #include "logging.hxx"
 #include "rp65c02.hxx"
 #include "cia6526.hxx"
+#include "cia1.hxx"
+#include "cia2.hxx"
 #include "vic6569.hxx"
 #include "videoOut.hxx"
 #include "keyboard.hxx"

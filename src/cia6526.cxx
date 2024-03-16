@@ -8,12 +8,10 @@
 
 #include "stdinclude.hxx"
 
-CIA6526::CIA6526(Logging *pLogging, uint8_t id, RpPetra *pGlue)
+CIA6526::CIA6526(Logging *pLogging, RpPetra *pGlue)
 {
     m_pLog=pLogging;
     m_pGlue=pGlue;
-    m_registerSet[0x01]=0xff; // Pull-up setting all high.
-    m_id=id;
 }
 
 CIA6526::~CIA6526() {}
@@ -23,17 +21,19 @@ void CIA6526::Reset()
 {
   m_i64Clks=0;
 }
-void CIA6526::Clk() 
-{
-  m_i64Clks++;
-  
-  // size_t const BufferSize = 512;
-  //char buffer[BufferSize];
 
+// Default: IRQ 
+void CIA6526::SignalInterrupt()
+{
+  m_pGlue->SignalIRQ(true);
+}
+
+void CIA6526::handleTimerA()
+{
   if (m_registerSetWrite[0x0e] & 0x01) // Start timer set?
   {
     // Interrupt Timer A allowed, decrease counter
-    int16_t timer=m_registerSet[0x05]*256+m_registerSet[0x04];
+    uint16_t timer=m_registerSet[0x05]*256+m_registerSet[0x04];
     if (timer>0 && (m_registerSet[0x0e] & 0x01)) // 0x0e bit 0 indicates start countdown
     {
       timer--;
@@ -44,8 +44,7 @@ void CIA6526::Clk()
         if (m_registerSetWrite[0x0d] & 0x01) // IRQ timer A allowed?
         {
           m_registerSet[0x0d]|=0x81; // IRQ, timer A
-          //m_pGlue->m_pLog->LogInfo({"CIA: IRQ signalled.\n\r"});
-          m_pGlue->SignalIRQ(true);
+          SignalInterrupt();
 
           m_registerSet[0x04]=m_registerSetWrite[0x04];
           m_registerSet[0x05]=m_registerSetWrite[0x05];
@@ -60,44 +59,48 @@ void CIA6526::Clk()
   }
 }
 
+void CIA6526::handleTimerB()
+{
+  if (m_registerSetWrite[0x0f] & 0x01) // Start timer set?
+  {
+    // Interrupt Timer B allowed, decrease counter
+    uint16_t timer=m_registerSet[0x07]*256+m_registerSet[0x06];
+    if (timer>0 && (m_registerSet[0x0e] & 0x01)) // 0x0e bit 0 indicates start countdown
+    {
+      timer--;
+      m_registerSet[0x06]=timer % 256;
+      m_registerSet[0x07]=timer / 256;
+      if (timer==0)
+      {
+        if (m_registerSetWrite[0x0d] & 0x02) // IRQ timer B allowed?
+        {
+          m_registerSet[0x0d]|=0x82; // IRQ, timer B
+          SignalInterrupt();
+
+          m_registerSet[0x06]=m_registerSetWrite[0x06];
+          m_registerSet[0x07]=m_registerSetWrite[0x07];
+          
+          if (m_registerSetWrite[0x0f] & 0x08) // Single shot timer?
+          {
+              m_registerSetWrite[0x0f]&=0xfe; // Stop timer
+          }
+        }
+      }
+    }
+  }
+}
+
+void CIA6526::Clk() 
+{
+  m_i64Clks++;
+  
+  handleTimerA();
+  handleTimerB();
+}
+
 uint8_t CIA6526::ReadRegister(uint8_t reg) 
 {
-  uint8_t ret = m_registerSet[reg];
-  
-  if (m_id==1) // TODO: inherit from CIABase class (CIAA, CIAB) and overwrite method instead of id-comparision.
-  {
-    if (reg==0x01 && m_registerSet[2]==0xff) //  // 0=column (port A, $02 ctrl), 1=row (port B, $03 ctrl)
-    {
-        std::vector<Keys *> keysPressed=m_pGlue->m_pKeyboard->GetKeysPressed();
-        ret=0xff;
-        if (!keysPressed.empty())
-        {        
-            if (m_registerSet[0]==0x00) // C64 is probing if any key has been pressed...
-            {
-              ret=0x20;
-            }
-            else
-            {
-              for(auto keys : keysPressed)
-              {
-                if (keys->row==m_registerSet[0])
-                {
-                  ret&=keys->col;
-                }
-              }
-            }
-        }
-        m_registerSet[1]=ret;
-    }
-    else if (reg==0x00)
-    {
-      JoystickStatus status=m_pGlue->m_pJoystickA->m_status;
-      ret=status.up+status.down*2+status.left*4+status.right*8+status.fire*16;
-      m_registerSet[0]=ret;
-    }
-  
-  }
-
+  uint8_t ret=m_registerSet[reg];
   if (reg==0x0d)
   {
     if (ret & 0x80)
@@ -107,8 +110,7 @@ uint8_t CIA6526::ReadRegister(uint8_t reg)
     m_registerSet[reg]=0x00;
   }
   return ret;
-};
-
+}
 
 void CIA6526::WriteRegister(uint8_t reg, uint8_t value)
 {
@@ -123,8 +125,8 @@ void CIA6526::WriteRegister(uint8_t reg, uint8_t value)
     {
       // Clear bits 0..4
       m_registerSetWrite [reg]|=~(value & 0x1f);  
+      m_pGlue->SignalIRQ(false);
     }
-    
   }
   else {
     m_registerSet[reg]=value;

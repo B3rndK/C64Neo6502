@@ -6,7 +6,7 @@ class RpPetra;
 
 class CIA6526 {
   
-  private:  
+  protected:  
     Logging *m_pLog;
     uint64_t m_i64Clks;
     uint8_t m_registerSet[0x10];    
@@ -15,12 +15,15 @@ class CIA6526 {
     RpPetra *m_pGlue;
   
   public:
-    CIA6526(Logging *pLogging, uint8_t id, RpPetra *pGlue);
+    CIA6526(Logging *pLogging, RpPetra *pGlue);
     virtual ~CIA6526();
     void Reset();
     void Clk();
-    void WriteRegister(uint8_t reg, uint8_t value);
-    uint8_t ReadRegister(uint8_t reg);
+    virtual void WriteRegister(uint8_t reg, uint8_t value);
+    virtual uint8_t ReadRegister(uint8_t reg);
+    virtual void handleTimerA();
+    virtual void handleTimerB();
+    virtual void SignalInterrupt();
 };
 
 #endif

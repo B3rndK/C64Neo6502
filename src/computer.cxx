@@ -55,7 +55,7 @@ int Computer::Run()
   Init();
   tuh_task();
   do {
-    if (m_totalCyles%23000==0)
+    if (m_totalCyles%21000==0)
     {
         tuh_task();
     }
