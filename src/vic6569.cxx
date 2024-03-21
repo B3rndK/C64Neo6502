@@ -659,8 +659,7 @@ void VIC6569::HandleMulticolorBitmapMode()
 
 void VIC6569::Clk() 
 {
-  static uint8_t frameNoToRefresh=1;
-  static uint8_t currentFrame=1;
+  bool signalIRQ=false; 
   m_i64Clks++;
   
   // Every 63 clocks the VIC starts a new line
@@ -671,11 +670,6 @@ void VIC6569::Clk()
 
     if (m_currentScanLine>NUM_OF_VLINES_PAL)
     {
-      currentFrame++;
-      if (currentFrame>frameNoToRefresh)
-      {
-        currentFrame=1;
-      }
       m_currentScanLine=0;
       m_registerSetRead[0x11]&=0x7F;
       m_registerSetRead[0x12]=0;
@@ -687,29 +681,30 @@ void VIC6569::Clk()
     }
     else 
     {
+      m_registerSetRead[0x11]&=0b01111111;
       m_registerSetRead[0x12]=m_currentScanLine;
     }
     // Now check if we need to signal an IRQ due to vertical line count
-    if (m_registerSetRead[0x1a] & 0x01)
+    if (m_registerSetWrite[0x1a] & 0x01)
     {
-      int irqAtScanline=m_registerSetWrite[0x12];
+      int irqAtScanline=m_registerSetWrite[0x12]; // registerSetWrite: When shall the next IRQ occur?
       if (m_registerSetWrite[0x11] & 0x80)
       {
         irqAtScanline+=256;
       }
-      if (irqAtScanline==m_currentScanLine)
-      {
-        // Indicate raster match
-        m_registerSetWrite[0x19]|=0x81;
-        m_registerSetRead[0x19]|=0x81;
-        _pGlue->SignalNMI(false);
-        _pGlue->SignalNMI(true);
-      }
+      signalIRQ=irqAtScanline==m_currentScanLine;
     }
-    if (currentFrame==frameNoToRefresh || frameNoToRefresh==1)
+    if (signalIRQ)
     {
-      UpdateFrameBuffer(); // Update every scanline
+      // Indicate raster match to irq routine
+      m_registerSetRead[0x19]|=0x81;
+      m_pGlue->SignalIRQ(true);
+      
     }
+  }
+  if (m_i64Clks % CLOCKS_PER_HLINE==62 || m_i64Clks==0) {
+    m_borderColor[m_currentScanLine]=m_registerSetRead[0x20];
+    UpdateFrameBuffer(); // Update every scanline
   }
 }
 
@@ -719,19 +714,37 @@ void VIC6569::WriteRegister(uint8_t reg, uint8_t value)
   switch (reg)
   {
     case 0x19:
-      m_registerSetWrite[reg]=value;
-      if (value & 0x01)
+      /* if (value & 0x81 || value & 0x80 || value & 0x01)
       {
-        m_pGlue->SignalIRQ(false); 
+        m_registerSetWrite[reg]&=0x7e;
+        m_registerSetRead[reg]&=0x7e;
+        m_pGlue->SignalIRQ(false);   
+      }
+      else
+      {
+        m_registerSetWrite[reg]=~value;
+        m_registerSetRead[reg]=~value;
+      }*/
+      
+      m_registerSetWrite[reg]=~value;
+      m_registerSetRead[reg]=m_registerSetWrite[reg];
+      if (!(value & 0x01)) 
+      {
+        m_pGlue->SignalIRQ(false);   
       }
     break;
 
+    case 0x1a:
+      m_registerSetWrite[reg]=value;
+    break;
+
     case 0x11:
-    case 0x12:
       m_registerSetWrite[reg]=value;
       m_registerSetRead[reg]=value;  
     break;
-
+    case 0x12:
+      m_registerSetWrite[reg]=value;
+    break;
     default:
       m_registerSetRead[reg]=value;  
   }

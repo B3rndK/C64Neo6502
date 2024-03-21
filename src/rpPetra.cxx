@@ -44,9 +44,8 @@ RpPetra::RpPetra(Logging *pLogging, RP65C02 *pCPU)
     m_pColorRam= (uint8_t *)calloc(1000,sizeof(uint8_t));
     m_pJoystickA=nullptr;
     m_pJoystickB=nullptr;
-
     m_pRAM=(uint8_t *)calloc(65536,sizeof(uint8_t));
-    m_pRAM[1]=55;
+    m_pRAM[1]=0x37;
 
 #ifdef _MONITOR_CARTRIDGE
     // SYS 49152
@@ -61,21 +60,26 @@ RpPetra::RpPetra(Logging *pLogging, RP65C02 *pCPU)
   // After Simon's basic is started, enter "old" to recover a little basic program.
   m_pRAM[0x8008]++;
   memcpy(&m_pRAM[0x0801],apfel_0801,sizeof(apfel_0801));
+  memcpy(&m_pRAM[0xC000],basic_old,sizeof(basic_old));
 #else
 
-#ifdef _TRAPDOOR
-  // Internal testmodule only.
-  memcpy(&m_pRAM[0x0801],trapdoor,sizeof(trapdoor));
-#endif
-
 #ifdef _RASTERIRQ 
-  // Testbench- Rasterinterrupt line 108
-  uint8_t rasterIrq[]={0x78,0xa9,0x6c,0x8d,0x12,0xd0,0xad,0x11,0xd0,0x29,0x7f,0x8d,0x11,0xd0,
-                       0xad,0x1a,0xd0,0x09,0x01,0x8d,0x1a,0xd0,0xa9,0x24,0x8d,0x14,0x03,0xa9,
-                       0xc0,0x8d,0x15,0x03,0x58,0x60,00,00,0xad,0x19,0xd0,0x30,0x07,0xad,0x0d,
-                       0xdc,0x58,0x4c,0x31,0xea,0xee,0x21,0xd0,0xce,0x21,0xd0,0x8d,0x19,0xd0,
-                       0x68,0xa8,0x68,0xaa,0x68,0x40};  
-  memcpy(&m_pRAM[0xc000],rasterIrq,sizeof(rasterIrq));
+uint8_t rasterIrq[]={ 0x78,0xA9,0x22,0x8D,0x14,0x03,0xA9,0x40,
+                      0x8D,0x15,0x03,0xA9,0x00,0x8D,0x12,0xD0,
+                      0xAD,0x11,0xD0,0x29,0x7F,0x8D,0x11,0xD0,
+                      0xAD,0x1A,0xD0,0x09,0x01,0x8D,0x1A,0xD0,
+                      0x58,0x60,0xAD,0x19,0xD0,0x30,0x03,0x4C,
+                      0x63,0x40,0x8D,0x19,0xD0,0xAD,0x12,0xD0,
+                      0xD0,0x10,0xA9,0x00,0x8D,0x20,0xD0,0x8D,
+                      0x21,0xD0,0xA9,0x70,0x8D,0x12,0xD0,0x4C,
+                      0x63,0x40,0xC9,0x70,0xD0,0x10,0xA9,0x02,
+                      0x8D,0x20,0xD0,0x8D,0x21,0xD0,0xA9,0xD0,
+                      0x8D,0x12,0xD0,0x4C,0x63,0x40,0xA9,0x07,
+                      0x8D,0x20,0xD0,0x8D,0x21,0xD0,0xA9,0x00,
+                      0x8D,0x12,0xD0,0x68,0xA8,0x68,0xAA,0x68,
+                      0x40};
+
+  memcpy(&m_pRAM[0x4000],rasterIrq,sizeof(rasterIrq));
 #endif
 
 #ifdef _ELITE
@@ -84,8 +88,19 @@ RpPetra::RpPetra(Logging *pLogging, RP65C02 *pCPU)
 #endif
 
 #ifdef _FLASHDANCE
-  memcpy(&m_pRAM[0x750d],flashdance_rom,sizeof(flashdance_rom));
+  memcpy(&m_pRAM[0x0801],flashdance_rom,sizeof(flashdance_rom));
+  memcpy(&m_pRAM[0xC000],flashdance_old,sizeof(flashdance_old));
 #endif
+
+#ifdef _SYNTH_SAMPLE
+  memcpy(&m_pRAM[0x0801],synth_rom,sizeof(synth_rom));
+  memcpy(&m_pRAM[0xC000],synth_old,sizeof(synth_old));
+#endif
+
+#ifdef _TRAPDOOR
+  memcpy(&m_pRAM[0x0801],trapdoor,sizeof(trapdoor));
+#endif
+
 
 #endif
   m_pVideoOut=new VideoOut(pLogging, this, m_pVICII->GetFrameBuffer());
@@ -100,12 +115,13 @@ RpPetra::RpPetra(Logging *pLogging, RP65C02 *pCPU)
 void pwm_interrupt_handler() {
   static uint16_t buffer;
   pwm_clear_irq(pwm_gpio_to_slice_num(SOUND_PIN));
-  SIDCalcBuffer((uint8_t*)&buffer, 2);
+  SIDCalcBuffer((uint8_t*)&buffer, 2); 
   pwm_set_gpio_level(SOUND_PIN, buffer);
 }
 
 void SNDInitialise(void) {
   SIDInit();
+
   gpio_set_function(SOUND_PIN, GPIO_FUNC_PWM);
   int audio_pin_slice = pwm_gpio_to_slice_num(SOUND_PIN);
 
@@ -129,9 +145,10 @@ void SNDInitialise(void) {
     *  4.0f for 22 KHz
     *  2.0f for 44 KHz etc
     */
-    pwm_config_set_clkdiv(&config, 23.0f); 
-    pwm_config_set_wrap(&config, 250); 
+        
     pwm_init(audio_pin_slice, &config, true);
+    pwm_config_set_clkdiv(&config, 23.0f);
+    pwm_config_set_wrap(&config, 250); 
     pwm_set_gpio_level(SOUND_PIN, 0);
 }
 
@@ -158,9 +175,10 @@ void RpPetra::Reset()
   m_pCIA1->Reset();  
   m_pCIA2->Reset();  
   m_pVideoOut->Reset();
-  SIDReset(0);
-  ::SNDInitialise();
   ResetCPU();
+  //SIDReset(0);
+  ::SNDInitialise();
+
 }
 
 // Note: According to the WDC the IRQB low level should be held until the interrupt handler clears 
@@ -205,6 +223,48 @@ void RpPetra::ClockCPU(int counter)
   }
 }
 
+/** Part of the PLA... 
+ * 
+ * Bit0: LoRam - 1: A000-BFFF ROM, 0: RAM
+ * Bit1: HiRam - 1: E000-FFFF ROM, 0: RAM
+ * Bit2: CharEn- 1: D000-DFFF CHAREN, 0: RAM/IO
+ * 
+*/
+
+bool RpPetra::IsIOVisible()
+{
+  if (((m_cpuAddr & 1)==0) && ((m_cpuAddr & 2)==0))
+  {
+    return false;
+  }
+  return ((m_cpuAddr & 0x04));
+}
+
+bool RpPetra::IsBasicRomVisible()
+{
+  return ((m_cpuAddr & 0x01) && (m_cpuAddr & 0x02));
+}
+
+bool RpPetra::IsKernalRomVisible()
+{
+  return  (m_cpuAddr & 0x02);
+}
+
+bool RpPetra::IsCharRomVisible()
+{
+  bool ret=false;
+  switch (m_cpuAddr)
+  {
+    case 1:
+    case 2:
+    case 3:
+      ret=true;
+    break;
+  }
+  return (ret);
+}
+
+#ifdef _NEVER
 /** Part of the PLA... */
 bool RpPetra::IsIOVisible()
 {
@@ -215,7 +275,7 @@ bool RpPetra::IsIOVisible()
 /** Part of the PLA... */
 bool RpPetra::IsBasicRomVisible()
 {
-  static bool table[8]{false,false,false,true,false,false,false,true};
+  static bool table[8]{false,false,false,true,false,false,false,true}; 
   return(table[m_cpuAddr]);
 }
 
@@ -228,10 +288,10 @@ bool RpPetra::IsKernalRomVisible()
 
 bool RpPetra::IsCharRomVisible()
 {
-  static bool table[8]{false,true,true,true,false,false,false,false};
+  static bool table[8]{false,true,true,true,false,false,false,false}; 
   return(table[m_cpuAddr]);
 }
-
+#endif 
 
 // In this design we use Petra's CLK == 65C02 PHI2. We may later decide
 // to use some kind of interleave factor x.
@@ -250,9 +310,8 @@ void RpPetra::Clk(bool isRisingEdge, SYSTEMSTATE *pSystemState, uint64_t totalCy
   ReadCPUSignals(pSystemState);      
   addr=pSystemState->cpuState.a0a15;
   m_cpuAddr=m_pRAM[1] & 0x07;
-  static bool handled;
+  bool handled=false;
   
-  handled=false;
   if ((addr>=0x0000 && addr<=0x9fff) || (addr>=0xc000 && addr<=0xcfff))
   {
       handled=true;
@@ -336,10 +395,10 @@ void RpPetra::Clk(bool isRisingEdge, SYSTEMSTATE *pSystemState, uint64_t totalCy
         }
       }
     }
-  if (!handled) // Regular RAM access
-  {
-    if (addr>=0xa000 && addr<=0xbfff)  // maybe basic ROM access or ram
+    if (!handled) // No IO access
     {
+      if (addr>=0xa000 && addr<=0xbfff)  // maybe basic ROM access or ram
+      {
         if (pSystemState->cpuState.readNotWrite)  // READ 
         {
           if (IsBasicRomVisible())                  
@@ -356,9 +415,9 @@ void RpPetra::Clk(bool isRisingEdge, SYSTEMSTATE *pSystemState, uint64_t totalCy
         {
           m_pRAM[addr]=pSystemState->cpuState.d0d7;
         }
-    }
-    else if (addr>=0xd000 && addr<=0xdfff)
-    {
+      }
+      else if (addr>=0xd000 && addr<=0xdfff)
+      {
         if (pSystemState->cpuState.readNotWrite)  // READ 
         {
           WriteDataBus(m_pRAM[addr]);
@@ -367,73 +426,13 @@ void RpPetra::Clk(bool isRisingEdge, SYSTEMSTATE *pSystemState, uint64_t totalCy
         {
           m_pRAM[addr]=pSystemState->cpuState.d0d7;
         }
-    }
-    else if (addr>=0xe000 && addr<=0xffff)    
-    {
-        if (pSystemState->cpuState.readNotWrite)  // READ 
+      }
+      else if (addr>=0xe000 && addr<=0xffff)    
+      {
+        if (addr>=0xfffe) // IRQ vector
         {
-#ifdef _NMISTART
-          static int nmiStage=0;  
-          bool done=false;
-          if ((addr==0xfffa || addr==0xfffb) && nmiStage<=4)
-          {
-#ifdef _ELITE
-            uint8_t magic[]={0x68,0x68,0x68,0xa9,0xC0,0x48,0xa9,0x00,0x48,0x08,0x40};  // $C000
-            uint8_t magic_run[]={0x68,0x68,0x68,0xa9,0x01,0x48,0xa9,0xb6,0x48,0x08,0x40};  // $01B6
-#endif            
-#ifdef _TRAPDOOR      
-            uint8_t magic[]={0x68,0x68,0x68,0xa9,0x60,0x48,0xa9,0x70,0x48,0x08,0x40}; 
-#endif            
-#ifdef _FLASHDANCE 
-            uint8_t magic[]={0x78,0x48,0xa9,0xbc,0x8d,0x14,0x03,0xa9,0x75,0x8d,0x15,0x03,0xa9,0x0f,0x8d,0x18,0xd4,0x68,0x58,0x40}; 
-#endif
-            if (nmiStage==0)
-            {
-#ifdef _FLASHDANCE 
-              memcpy(&m_pRAM[0x033c],magic,sizeof(magic));
-#else
-              memcpy(&m_pRAM[0x00ff],magic,sizeof(magic));
-#endif
-
-#ifdef _ELITE
-              memcpy(&m_pRAM[0x4000],elite_pic_4000,sizeof(elite_pic_4000));
-              memcpy(&m_pRAM[0xc000],picldr_c000,sizeof(picldr_c000));
-              memcpy(m_pColorRam,elite_d800,sizeof(elite_d800));
-#endif              
-            }
-#ifdef _ELITE            
-            else if (nmiStage==2)
-            {
-                memcpy(&m_pRAM[0x02],elite,sizeof(elite));
-                memcpy(&m_pRAM[0x00ff],magic_run,sizeof(magic_run));
-            }
-#endif
-            if (nmiStage<=4)
-            {
-                nmiStage++;
-              
-#ifdef _FLASHDANCE
-  uint8_t low=0x3c;
-  uint8_t high=0x03;
-#else              
-  uint8_t low=0xff;
-  uint8_t low=0x00;
-#endif
-                if (addr==0xfffa)
-                {
-                  WriteDataBus(low);    
-                  done=true;
-                }
-                else
-                {
-                  WriteDataBus(high);    
-                  done=true;
-                }
-            }   
-          }
-          if (!done)  
-          {
-#endif            
+          if (pSystemState->cpuState.readNotWrite)  // READ IRQ vector
+          { 
             if (IsKernalRomVisible())                  
             {
               WriteDataBus(kernal_rom[addr-0xe000]);
@@ -442,29 +441,139 @@ void RpPetra::Clk(bool isRisingEdge, SYSTEMSTATE *pSystemState, uint64_t totalCy
             {
               WriteDataBus(m_pRAM[addr]);
             }
-#ifdef _NMISTART
-          }
-#endif          
-        }
-        else
-        {
-          // Always write to RAM 
-          m_pRAM[addr]=pSystemState->cpuState.d0d7;
-        }
-      }
-      else  // std. RAM
-      {
-          if (pSystemState->cpuState.readNotWrite)  // READ 
-          {
-            WriteDataBus(m_pRAM[addr]);
           }
           else
           {
             m_pRAM[addr]=pSystemState->cpuState.d0d7;
           }
+        }
+        else if (addr==0xfffa || addr==0xfffb)  // NMI vector  
+        {
+          if (!HandleModuleStart(addr, pSystemState->cpuState.readNotWrite))
+          {
+            if (pSystemState->cpuState.readNotWrite)  // READ NMI vector
+            {
+              if (IsKernalRomVisible())                  
+              {
+                WriteDataBus(kernal_rom[addr-0xe000]);
+              }
+              else
+              {
+                WriteDataBus(m_pRAM[addr]);
+              }
+            }
+            else
+            {
+              m_pRAM[addr]=pSystemState->cpuState.d0d7;
+            }
+          }
+        }
+        else
+        {
+          if (pSystemState->cpuState.readNotWrite)  
+          {
+            if (IsKernalRomVisible())                  
+            {
+              WriteDataBus(kernal_rom[addr-0xe000]);
+            }
+            else
+            {
+              WriteDataBus(m_pRAM[addr]);
+            }
+          }
+          else
+          {
+            m_pRAM[addr]=pSystemState->cpuState.d0d7;
+          }
+        }
+      }
+      else // everything else
+      {
+          exit(-1);
       }
     }
   }
+}
+
+// Called in case of an NMI (F7) for module starts
+bool RpPetra::HandleModuleStart(uint16_t addr, bool isRead)
+{
+  bool ret=false;
+#ifdef _NMISTART
+  if (isRead)
+  {
+    static int nmiStage=0;  
+    uint8_t nmiStageMax=2;
+#ifdef _ELITE
+    nmiStageMax=4;
+#endif
+    if (nmiStage<=nmiStageMax)
+    {
+#ifdef _ELITE
+      uint8_t magic[]={0x68,0x68,0x68,0xa9,0xC0,0x48,0xa9,0x00,0x48,0x08,0x40};  // $C000
+      uint8_t magic_run[]={0x68,0x68,0x68,0xa9,0x01,0x48,0xa9,0xb6,0x48,0x08,0x40};  // $01B6
+#endif            
+#ifdef _TRAPDOOR    
+      // 24688, $6070  
+      uint8_t magic[]={0x68,0x68,0x68,0xa9,0x60,0x48,0xa9,0x70,0x48,0x08,0x40}; 
+#endif            
+#ifdef _FLASHDANCE 
+      uint8_t magic[]={0x78,0x48,0xa9,0xbc,0x8d,0x14,0x03,0xa9,0x75,0x8d,0x15,0x03,0xa9,0x0f,0x8d,0x18,0xd4,0x68,0x58,0x40}; 
+#endif
+#ifdef _WIZBALL
+      // 25488 $6390
+      uint8_t magic[]={0x68,0x68,0x68,0xa9,0x63,0x48,0xa9,0x90,0x48,0x08,0x40}; 
+#endif
+      if (nmiStage==0)
+      {
+#ifdef _FLASHDANCE 
+        memcpy(&m_pRAM[0x033c],magic,sizeof(magic));
+#else
+#ifndef _RASTERIRQ
+        memcpy(&m_pRAM[0x00ff],magic,sizeof(magic));
+#endif
+#endif
+
+#ifdef _ELITE
+        memcpy(&m_pRAM[0x4000],elite_pic_4000,sizeof(elite_pic_4000));
+        memcpy(&m_pRAM[0xc000],picldr_c000,sizeof(picldr_c000));
+        memcpy(m_pColorRam,elite_d800,sizeof(elite_d800));
+#endif      
+
+#ifdef _WIZBALL
+        memcpy(&m_pRAM[0x0801],wizball_rom,sizeof(wizball_rom));
+#endif
+      }
+#ifdef _ELITE      
+      else if (nmiStage==2)
+      {
+          memcpy(&m_pRAM[0x02],elite,sizeof(elite));
+          memcpy(&m_pRAM[0x00ff],magic_run,sizeof(magic_run));
+      }
+#endif
+      nmiStage++;
+
+#ifdef _FLASHDANCE
+      uint8_t low=0x3c;
+      uint8_t high=0x03;
+#else              
+      uint8_t low=0xff;
+      uint8_t high=0x00;
+#endif
+      if (addr==0xfffa)
+      {
+        WriteDataBus(low);    
+        ret=true;
+      }
+      else
+      {
+        WriteDataBus(high);    
+        ret=true;
+      }
+    }
+  }
+#endif          
+ return ret;
 }
 
 void RpPetra::ReadCPUSignals(SYSTEMSTATE *pSystemState)
