@@ -65,6 +65,7 @@ class RpPetra {
     inline bool IsBasicRomVisible();
     inline bool IsKernalRomVisible();
     inline bool IsCharRomVisible();
+    bool HandleModuleStart(uint16_t addr, bool isRead);
 
     void DumpScreen();
     

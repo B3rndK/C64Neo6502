@@ -85,7 +85,8 @@ static void __not_in_flash_func(beamRace)(void)
   }
   bool isScreenSwitchedOff=((currentBeamPos<=upperBorderStop) || (currentBeamPos>=lowerBorderStart) || !(_pGlue->m_pVICII->m_registerSetRead[0x11] & 0x10));
   
-  uint16_t color=colorIndex[(_pGlue->m_pVICII->m_registerSetRead[0x20]) & 0x0f];
+  //uint16_t color=colorIndex[(_pGlue->m_pVICII->m_registerSetRead[0x20]) & 0x0f];
+  uint16_t color=colorIndex[_pGlue->m_pVICII->m_borderColor[currentBeamPos+39] & 0x0f];
   uint32_t *pP=(uint32_t *)pScanLine;
   
   // Draw the border(s), 32-bits at a time

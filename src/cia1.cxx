@@ -44,15 +44,9 @@ uint8_t CIA1::ReadRegister(uint8_t reg)
     ret=status.up+status.down*2+status.left*4+status.right*8+status.fire*16;
     m_registerSet[0]=ret;
   }
-  
-  if (reg==0x0d)
+  else
   {
-    if (ret & 0x80)
-    {
-      m_pGlue->SignalIRQ(false);
-    }
-    m_registerSet[reg]=0x00;
+    ret=CIA6526::ReadRegister(reg);
   }
-
   return ret;
 }

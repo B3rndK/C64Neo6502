@@ -23,7 +23,7 @@ class CIA6526 {
     virtual uint8_t ReadRegister(uint8_t reg);
     virtual void handleTimerA();
     virtual void handleTimerB();
-    virtual void SignalInterrupt();
+    virtual void SignalInterrupt(bool signal); // true- yes, false-no
 };
 
 #endif

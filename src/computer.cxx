@@ -64,7 +64,6 @@ int Computer::Run()
     m_pGlue->Clk(LOW,&m_systemState,m_totalCyles);
     m_totalCyles++;
   } while (1);
-
   return (0);
 }
 

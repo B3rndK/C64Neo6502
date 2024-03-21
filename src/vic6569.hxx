@@ -40,6 +40,7 @@ class VIC6569 {
     void WriteRegister(uint8_t reg, uint8_t value);
     inline uint8_t *GetFrameBuffer() { return m_pFrameBuffer;};
     uint8_t m_registerSetRead[0x2f];    
+    uint8_t m_borderColor[NUM_OF_VLINES_PAL];
 };
 
 #endif

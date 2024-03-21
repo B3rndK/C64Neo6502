@@ -20,4 +20,10 @@
 #ifdef _ELITE
 #include "roms/elite.hxx" 
 #endif
+#ifdef _WIZBALL
+#include "roms/wizball.hxx"
+#endif
+#ifdef _SYNTH_SAMPLE
+#include "roms/synth_sample.hxx"
+#endif
 #endif

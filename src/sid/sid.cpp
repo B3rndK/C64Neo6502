@@ -540,7 +540,7 @@ void SIDInit()
     // Read preferences ("obtained" is set to have valid values in it if SDL_OpenAudio() fails)
     emulate_8580 = false;//(strncmp(PrefsFindString("sidtype", 0), "8580", 4) == 0);
     set_sid_data();
-    desired.freq = 44100;//obtained.freq = PrefsFindInt32("samplerate");
+    desired.freq = 11000; // 44100;//obtained.freq = PrefsFindInt32("samplerate");
     desired.format = 0;//obtained.format = PrefsFindBool("audio16bit") ? AUDIO_S16SYS : AUDIO_U8;
     desired.channels = 1;//obtained.channels = PrefsFindBool("stereo") ? 2 : 1;
     enable_filters = false;//PrefsFindBool("filters");
@@ -960,7 +960,9 @@ static void calc_buffer(void *userdata, uint8_t *buf, int count)
 
     // Convert buffer length (in bytes) to frame count
     bool is_stereo = false;//(obtained.channels == 2);
-    bool is_16_bit = true;//!(obtained.format == AUDIO_U8 || obtained.format == AUDIO_S8);
+    bool is_16_bit = true; // was: true !(obtained.format == AUDIO_U8 || obtained.format == AUDIO_S8);
+        
+    
     if (is_stereo)
         count >>= 1;
     if (is_16_bit)
