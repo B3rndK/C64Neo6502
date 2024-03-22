@@ -120,6 +120,11 @@ void pwm_interrupt_handler() {
 }
 
 void SNDInitialise(void) {
+
+#ifdef _NO_SID 
+  return;
+#else
+
   SIDInit();
 
   gpio_set_function(SOUND_PIN, GPIO_FUNC_PWM);
@@ -150,6 +155,7 @@ void SNDInitialise(void) {
     pwm_config_set_clkdiv(&config, 23.0f);
     pwm_config_set_wrap(&config, 250); 
     pwm_set_gpio_level(SOUND_PIN, 0);
+#endif    
 }
 
 
@@ -340,12 +346,14 @@ void RpPetra::Clk(bool isRisingEdge, SYSTEMSTATE *pSystemState, uint64_t totalCy
       else if (addr>=0xd400 && addr<=0xd41c) // SID6581/6582/8580
       {
         handled=true;
+#ifndef _NO_SID      
         if (pSystemState->cpuState.readNotWrite) {   // READ access
           sid_read((uint32_t)addr-0xd400, (cycle_t)totalCycles);
         }
         else {
           sid_write((uint32_t)addr-0xd400,pSystemState->cpuState.d0d7);
         }
+#endif
       } 
       else if (addr>=0xd800 && addr<=0xdbe7) // Colorram
       {
@@ -449,8 +457,11 @@ void RpPetra::Clk(bool isRisingEdge, SYSTEMSTATE *pSystemState, uint64_t totalCy
         }
         else if (addr==0xfffa || addr==0xfffb)  // NMI vector  
         {
+#ifdef _NMISTART
           if (!HandleModuleStart(addr, pSystemState->cpuState.readNotWrite))
+#endif
           {
+
             if (pSystemState->cpuState.readNotWrite)  // READ NMI vector
             {
               if (IsKernalRomVisible())                  
@@ -512,26 +523,25 @@ bool RpPetra::HandleModuleStart(uint16_t addr, bool isRead)
 #ifdef _ELITE
       uint8_t magic[]={0x68,0x68,0x68,0xa9,0xC0,0x48,0xa9,0x00,0x48,0x08,0x40};  // $C000
       uint8_t magic_run[]={0x68,0x68,0x68,0xa9,0x01,0x48,0xa9,0xb6,0x48,0x08,0x40};  // $01B6
-#endif            
-#ifdef _TRAPDOOR    
+#elif _TRAPDOOR    
       // 24688, $6070  
       uint8_t magic[]={0x68,0x68,0x68,0xa9,0x60,0x48,0xa9,0x70,0x48,0x08,0x40}; 
-#endif            
-#ifdef _FLASHDANCE 
+#elif _FLASHDANCE 
       uint8_t magic[]={0x78,0x48,0xa9,0xbc,0x8d,0x14,0x03,0xa9,0x75,0x8d,0x15,0x03,0xa9,0x0f,0x8d,0x18,0xd4,0x68,0x58,0x40}; 
-#endif
-#ifdef _WIZBALL
+#elif _WIZBALL
       // 25488 $6390
       uint8_t magic[]={0x68,0x68,0x68,0xa9,0x63,0x48,0xa9,0x90,0x48,0x08,0x40}; 
+#else
+      uint8_t magic[]={0x40}; 
 #endif
       if (nmiStage==0)
       {
+        
 #ifdef _FLASHDANCE 
         memcpy(&m_pRAM[0x033c],magic,sizeof(magic));
-#else
+#endif
 #ifndef _RASTERIRQ
         memcpy(&m_pRAM[0x00ff],magic,sizeof(magic));
-#endif
 #endif
 
 #ifdef _ELITE

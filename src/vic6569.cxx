@@ -714,18 +714,6 @@ void VIC6569::WriteRegister(uint8_t reg, uint8_t value)
   switch (reg)
   {
     case 0x19:
-      /* if (value & 0x81 || value & 0x80 || value & 0x01)
-      {
-        m_registerSetWrite[reg]&=0x7e;
-        m_registerSetRead[reg]&=0x7e;
-        m_pGlue->SignalIRQ(false);   
-      }
-      else
-      {
-        m_registerSetWrite[reg]=~value;
-        m_registerSetRead[reg]=~value;
-      }*/
-      
       m_registerSetWrite[reg]=~value;
       m_registerSetRead[reg]=m_registerSetWrite[reg];
       if (!(value & 0x01)) 
