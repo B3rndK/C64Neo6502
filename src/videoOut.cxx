@@ -64,36 +64,57 @@ static void __not_in_flash_func(beamRace)(void)
   static int lowerBorderStart;
   static int leftBorderEnd;
 
-  // Border handling
-  if (_pGlue->m_pVICII->m_registerSetRead[0x11] & 0b00001000)  // Display is 25 lines
-  {
-    upperBorderStop=12;
-    lowerBorderStart=220;
-  }
-  else  // 24 lines
+  // 25 lines
+  upperBorderStop=12;
+  lowerBorderStart=220;
+  
+  if ((_pGlue->m_pVICII->m_registerSetRead[0x11] & 0b00001000)==0)  // Display is 24 lines
   {
     upperBorderStop=20;
     lowerBorderStart=212;
   }
+
+  leftBorderEnd=28; // 38 cols
   if (_pGlue->m_pVICII->m_registerSetRead[0x16] & 0b00001000) // 40 cols
   {
     leftBorderEnd=20;
   }
-  else 
-  { // 38 cols
-    leftBorderEnd=28;
-  }
+
   bool isScreenSwitchedOff=((currentBeamPos<=upperBorderStop) || (currentBeamPos>=lowerBorderStart) || !(_pGlue->m_pVICII->m_registerSetRead[0x11] & 0x10));
-  
-  //uint16_t color=colorIndex[(_pGlue->m_pVICII->m_registerSetRead[0x20]) & 0x0f];
+
   uint16_t color=colorIndex[_pGlue->m_pVICII->m_borderColor[currentBeamPos+39] & 0x0f];
   uint32_t *pP=(uint32_t *)pScanLine;
-  
-  // Draw the border(s), 32-bits at a time
-  for (int i=0;i<340/2;i++)
+  uint32_t pixel=(color<<16 | color)<< 31 | ((color << 16 | color));
+  uint16_t idx=0;
+  // Blit the border(s) or blank the screen, 32-bits at a time (loop unrolled)
+  for (int i=0;i<8;i++) 
   {
-    pP[i]=(uint32_t) (color << 16) | color;
+    pP[idx]=pixel;
+    pP[idx+1]=pixel;
+    pP[idx+2]=pixel;
+    pP[idx+3]=pixel;
+    pP[idx+4]=pixel;
+    pP[idx+5]=pixel;
+    pP[idx+6]=pixel;
+    pP[idx+7]=pixel;
+    pP[idx+8]=pixel;
+    pP[idx+9]=pixel;
+    pP[idx+10]=pixel;
+    pP[idx+11]=pixel;
+    pP[idx+12]=pixel;
+    pP[idx+13]=pixel;
+    pP[idx+14]=pixel;
+    pP[idx+15]=pixel;
+    pP[idx+16]=pixel;
+    pP[idx+17]=pixel;
+    pP[idx+18]=pixel;
+    pP[idx+19]=pixel;
+    pP[idx+20]=pixel;
+    idx+=21;
   }
+  // 336
+  pP[idx]=pixel;
+  pP[idx+1]=pixel;
 
   while (queue_try_remove_u32(&g_pDVI->q_colour_free, &pScanLine));  
   
@@ -101,14 +122,44 @@ static void __not_in_flash_func(beamRace)(void)
   {
     if (currentBeamPos<lowerBorderStart-upperBorderStop && currentBeamPos>upperBorderStop)
     {
-      int x=leftBorderEnd/3;
+      uint16_t x=leftBorderEnd/3;
       uint8_t *pCurBuffer = frameBuffer+((currentBeamPos-upperBorderStop)*160);
       uint8_t pixel; 
       // 2 pixels encoded in 4-bits... This way we can easily support even VIC's FLI color modes later on...
-      for (int i=0;i<320/2;i++) {
+      for (int i=0;i<320/2;i+=8) {
           pixel=pCurBuffer[i]; 
-          pScanLine[x++]=colorIndex[pixel>>4];
-          pScanLine[x++]=colorIndex[pixel & 15];
+          pScanLine[x]=colorIndex[pixel>>4];
+          pScanLine[x+1]=colorIndex[pixel & 15];
+
+          pixel=pCurBuffer[i+1]; 
+          pScanLine[x+2]=colorIndex[pixel>>4];
+          pScanLine[x+3]=colorIndex[pixel & 15];
+
+          pixel=pCurBuffer[i+2]; 
+          pScanLine[x+4]=colorIndex[pixel>>4];
+          pScanLine[x+5]=colorIndex[pixel & 15];
+
+          pixel=pCurBuffer[i+3]; 
+          pScanLine[x+6]=colorIndex[pixel>>4];
+          pScanLine[x+7]=colorIndex[pixel & 15];
+
+          pixel=pCurBuffer[i+4]; 
+          pScanLine[x+8]=colorIndex[pixel>>4];
+          pScanLine[x+9]=colorIndex[pixel & 15];
+
+          pixel=pCurBuffer[i+5]; 
+          pScanLine[x+10]=colorIndex[pixel>>4];
+          pScanLine[x+11]=colorIndex[pixel & 15];
+
+          pixel=pCurBuffer[i+6]; 
+          pScanLine[x+12]=colorIndex[pixel>>4];
+          pScanLine[x+13]=colorIndex[pixel & 15];
+
+          pixel=pCurBuffer[i+7]; 
+          pScanLine[x+14]=colorIndex[pixel>>4];
+          pScanLine[x+15]=colorIndex[pixel & 15];
+          x+=16;
+
       }
     }
   }
