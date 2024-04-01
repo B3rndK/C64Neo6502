@@ -12,8 +12,12 @@
             "gdbPath" : "gdb-multiarch",
             // Connect to an already running OpenOCD instance
             "gdbTarget": "127.0.0.1:3333",
+            //
             "svdFile": "${env:PICO_SDK_PATH}/src/rp2040/hardware_regs/rp2040.svd",
             "runToEntryPoint": "main",
+            "preLaunchCommands": [
+                "monitor arm semihosting enable"
+            ],
             // Work around for stopping at main on restart
             "postRestartCommands": [
                 "break main",

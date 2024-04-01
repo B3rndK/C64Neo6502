@@ -10,10 +10,6 @@ class CIA2 : public CIA6526 {
   public:
     CIA2(Logging *pLogging, RpPetra *pGlue);
     virtual ~CIA2();
-    uint8_t ReadRegister(uint8_t reg);
-    virtual void handleTimerA();
-    virtual void handleTimerB();
-
 };
 
 #endif

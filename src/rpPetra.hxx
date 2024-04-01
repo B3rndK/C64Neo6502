@@ -53,32 +53,35 @@ class RpPetra {
     RP65C02 *m_pCPU;
     VideoOut *m_pVideoOut;
     uint8_t m_cpuAddr;
-    void Enable_U5_only() { gpio_put_masked(pioMaskOE_U5_U6_U7, enableU5Only); };  
-    void Enable_U6_only() { gpio_put_masked(pioMaskOE_U5_U6_U7, enableU6Only); };  
-    void Enable_U7_only() { gpio_put_masked(pioMaskOE_U5_U6_U7, enableU7Only); };  
-    void DisableBus()     { gpio_put_masked(pioMaskOE_U5_U6_U7, disableU5U6U7);}
+    bool m_isBasicRomVisible;
+    bool m_isKernalRomVisible;
+    bool m_isCharRomVisible;
+    bool m_isIOVisible;
+
+    inline void Enable_U5_only() { gpio_put_masked(pioMaskOE_U5_U6_U7, enableU5Only); };  
+    inline void Enable_U6_only() { gpio_put_masked(pioMaskOE_U5_U6_U7, enableU6Only); };  
+    inline void Enable_U7_only() { gpio_put_masked(pioMaskOE_U5_U6_U7, enableU7Only); };  
+    inline void DisableBus()     { gpio_put_masked(pioMaskOE_U5_U6_U7, disableU5U6U7);}
     void ClockCPU(int counter);
-    void PHI2(bool isRisingEdge) { gpio_put(CLK,isRisingEdge);}
+    inline void PHI2(bool isRisingEdge) { gpio_put(CLK,isRisingEdge);}
     inline void WriteDataBus(uint8_t byte);
     inline void ReadCPUSignals(SYSTEMSTATE *pSystemState);
-    inline bool IsIOVisible();
-    inline bool IsBasicRomVisible();
-    inline bool IsKernalRomVisible();
-    inline bool IsCharRomVisible();
+    inline bool IsBasicRomVisible() { return m_isBasicRomVisible;};
+    inline bool IsKernalRomVisible() { return m_isKernalRomVisible;};
+    inline bool IsCharRomVisible() { return m_isCharRomVisible;};
+    inline bool IsIOVisible() { return m_isIOVisible;};
     bool HandleModuleStart(uint16_t addr, bool isRead);
-
-    void DumpScreen();
+    void CalcPLA(uint8_t cpuPort);
     
   public:
     bool m_screenUpdated;
 
-    void Clk(bool isRisingEdge, SYSTEMSTATE *pSystemState, uint64_t totalCycles);
+    void Clk(SYSTEMSTATE *pSystemState, uint64_t totalCycles);
     RpPetra(Logging *pLogging, RP65C02 *pCpu);
     void SignalIRQ(bool enable);
     void SignalNMI(bool enable);
     virtual ~RpPetra();
     void Reset();
-    void UpdateScreen();
     void ResetCPU();        
 };
 

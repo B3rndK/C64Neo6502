@@ -29,10 +29,6 @@
 
 // static uint8_t benchmark[]={0xA9, 0x00, 0xAA, 0xA8, 0xE8, 0xD0, 0xFD,0xC8,0xD0,0xFA,0xAA,0xE8,0x8A,0xC9,0xFF,0xD0,0xF3,0x8D,0x20,0xD0,0x4C,0x04,0xE0};
 
-static char Charset[]={ '@','A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z',
-                        '[','#',']','#','#',' ','!','"','#','$','%','&','`','(',')','*','+',',','-','.','/','0','1','2','3','4','5','6','7','8','9',
-                        ':',';','<','=','>','?'};
-
 RpPetra::RpPetra(Logging *pLogging, RP65C02 *pCPU)
 {
     m_pLog=pLogging;
@@ -41,7 +37,7 @@ RpPetra::RpPetra(Logging *pLogging, RP65C02 *pCPU)
     m_pCIA2 = new CIA2(pLogging,this);
     m_pVICII= new VIC6569(pLogging,this);
     m_pKeyboard= new Keyboard(pLogging, this);
-    m_pColorRam= (uint8_t *)calloc(1000,sizeof(uint8_t));
+    m_pColorRam= (uint8_t *)calloc(1024,sizeof(uint8_t));
     m_pJoystickA=nullptr;
     m_pJoystickB=nullptr;
     m_pRAM=(uint8_t *)calloc(65536,sizeof(uint8_t));
@@ -60,7 +56,6 @@ RpPetra::RpPetra(Logging *pLogging, RP65C02 *pCPU)
   // After Simon's basic is started, enter "old" to recover a little basic program.
   m_pRAM[0x8008]++;
   memcpy(&m_pRAM[0x0801],apfel_0801,sizeof(apfel_0801));
-  memcpy(&m_pRAM[0xC000],basic_old,sizeof(basic_old));
 #else
 
 #ifdef _RASTERIRQ 
@@ -83,13 +78,14 @@ uint8_t rasterIrq[]={ 0x78,0xA9,0x22,0x8D,0x14,0x03,0xA9,0x40,
 #endif
 
 #ifdef _ELITE
-  memcpy(&m_pRAM[0x4000],elite_pic_4000,sizeof(elite_pic_4000));
-  memcpy(&m_pRAM[0xc000],picldr_c000,sizeof(picldr_c000));
+  //memcpy(&m_pRAM[0x4000],elite_pic_4000,sizeof(elite_pic_4000));
+  //memcpy(&m_pRAM[0xc000],picldr_c000,sizeof(picldr_c000));
+  //memcpy(&m_pRAM[0x0801],elite_rom,sizeof(elite_rom));
 #endif
-
+  
 #ifdef _FLASHDANCE
   memcpy(&m_pRAM[0x0801],flashdance_rom,sizeof(flashdance_rom));
-  memcpy(&m_pRAM[0xC000],flashdance_old,sizeof(flashdance_old));
+  //memcpy(&m_pRAM[0xC000],flashdance_old,sizeof(flashdance_old));
 #endif
 
 #ifdef _SYNTH_SAMPLE
@@ -100,7 +96,6 @@ uint8_t rasterIrq[]={ 0x78,0xA9,0x22,0x8D,0x14,0x03,0xA9,0x40,
 #ifdef _TRAPDOOR
   memcpy(&m_pRAM[0x0801],trapdoor,sizeof(trapdoor));
 #endif
-
 
 #endif
   m_pVideoOut=new VideoOut(pLogging, this, m_pVICII->GetFrameBuffer());
@@ -113,10 +108,10 @@ uint8_t rasterIrq[]={ 0x78,0xA9,0x22,0x8D,0x14,0x03,0xA9,0x40,
 */
 
 void pwm_interrupt_handler() {
-  static uint16_t buffer;
+  static uint16_t buffer[16];
   pwm_clear_irq(pwm_gpio_to_slice_num(SOUND_PIN));
   SIDCalcBuffer((uint8_t*)&buffer, 2); 
-  pwm_set_gpio_level(SOUND_PIN, buffer);
+  pwm_set_gpio_level(SOUND_PIN, buffer[0]);
 }
 
 void SNDInitialise(void) {
@@ -124,7 +119,6 @@ void SNDInitialise(void) {
 #ifdef _NO_SID 
   return;
 #else
-
   SIDInit();
 
   gpio_set_function(SOUND_PIN, GPIO_FUNC_PWM);
@@ -182,15 +176,19 @@ void RpPetra::Reset()
   m_pCIA2->Reset();  
   m_pVideoOut->Reset();
   ResetCPU();
-  //SIDReset(0);
+#ifndef _NO_SID  
+  SIDReset(0);
   ::SNDInitialise();
-
+#endif
 }
 
 // Note: According to the WDC the IRQB low level should be held until the interrupt handler clears 
 // the interrupt request source.
 void RpPetra::SignalIRQ(bool enable)
 {
+  static u_int16_t activity=0;
+  if (enable && ++activity%1000==0) puts("*");
+
   if (enable) gpio_put(IRQ, LOW); // IRQ is low active so reset is active now
   else gpio_put(IRQ, HIGH); // IRQ is low active so reset is active now
 }
@@ -199,6 +197,9 @@ void RpPetra::SignalIRQ(bool enable)
 // current instruction is completed
 void RpPetra::SignalNMI(bool enable)
 {
+  static u_int16_t activity=0;
+  if (enable && ++activity%1000==0) puts("#");
+
   if (enable) gpio_put(NMI, LOW); // IRQ is low active so reset is active now
   else gpio_put(NMI, HIGH); // IRQ is low active so reset is active now
 }
@@ -234,210 +235,300 @@ void RpPetra::ClockCPU(int counter)
  * Bit0: LoRam - 1: A000-BFFF ROM, 0: RAM
  * Bit1: HiRam - 1: E000-FFFF ROM, 0: RAM
  * Bit2: CharEn- 1: D000-DFFF CHAREN, 0: RAM/IO
+
+ * 0- BASIC OFF , KERNAL OFF, RAM
+ * 1- BASIC OFF, KERNAL OFF, CHARGEN
+ * 2- BASIC OFF, KERNAL ON, CHARGEN
+ * 3- BASIC ON, KERNAL ON, CHARGEN
+ * 4- BASIC OFF, KERNAL OFF, RAM
+ * 5- BASIC OFF, KERNAL OFF, IO 
+ * 6- BASIC OFF, KERNAL ON, IO
+ * 7- BASIC ON, KERNAL ON, IO
+ * 8- BASIC OFF, KERNAL OFF, RAM
+ * 9- BASIC OFF, KERNAL OFF, CHARGEN
+ * 10- BASIC OFF, KERNAL ON, CHARGEN
+ * 11- BASIC ON, KERNAL ON, CHARGEN
+ * 12- BASIC OFF, KERNAL OFF, RAM
+ * 13- BASIC OFF, KERNAL OFF, IO
+ * 14- BASIC OFF, KERNAL ON, IO 
+ * 15- BASIC ON, KERNAL ON, IO
  * 
 */
 
-bool RpPetra::IsIOVisible()
+void RpPetra::CalcPLA(uint8_t cpuPort)
 {
-  if (((m_cpuAddr & 1)==0) && ((m_cpuAddr & 2)==0))
+  switch (cpuPort & 0x07)
   {
-    return false;
-  }
-  return ((m_cpuAddr & 0x04));
-}
-
-bool RpPetra::IsBasicRomVisible()
-{
-  return ((m_cpuAddr & 0x01) && (m_cpuAddr & 0x02));
-}
-
-bool RpPetra::IsKernalRomVisible()
-{
-  return  (m_cpuAddr & 0x02);
-}
-
-bool RpPetra::IsCharRomVisible()
-{
-  bool ret=false;
-  switch (m_cpuAddr)
-  {
+    case 0:
+      m_isBasicRomVisible=false;
+      m_isKernalRomVisible=false;
+      m_isIOVisible=false;
+      m_isCharRomVisible=false;
+    break;
     case 1:
+      m_isBasicRomVisible=false;
+      m_isKernalRomVisible=false;
+      m_isIOVisible=false;
+      m_isCharRomVisible=true;
+    break;
+    
     case 2:
+      m_isBasicRomVisible=false;
+      m_isKernalRomVisible=true;
+      m_isIOVisible=false;
+      m_isCharRomVisible=true;
+    break;
     case 3:
-      ret=true;
+      m_isBasicRomVisible=true;
+      m_isKernalRomVisible=true;
+      m_isIOVisible=false;
+      m_isCharRomVisible=true;
+    break;
+    case 4:
+      m_isBasicRomVisible=false;
+      m_isKernalRomVisible=false;
+      m_isIOVisible=false;
+      m_isCharRomVisible=false;
+    break;
+    case 5:
+      m_isBasicRomVisible=false;
+      m_isKernalRomVisible=false;
+      m_isIOVisible=true;
+      m_isCharRomVisible=false;
+    break;
+    case 6:
+      m_isBasicRomVisible=false;
+      m_isKernalRomVisible=true;
+      m_isIOVisible=true;
+      m_isCharRomVisible=false;
+    break;
+    case 7:
+      m_isBasicRomVisible=true;
+      m_isKernalRomVisible=true;
+      m_isIOVisible=true;
+      m_isCharRomVisible=false;
+    break;
+    case 8:
+      m_isBasicRomVisible=false;
+      m_isKernalRomVisible=false;
+      m_isIOVisible=false;
+      m_isCharRomVisible=false;
+    break;
+    case 9:
+      m_isBasicRomVisible=false;
+      m_isKernalRomVisible=false;
+      m_isIOVisible=false;
+      m_isCharRomVisible=true;
+    break;
+    case 10:
+      m_isBasicRomVisible=false;
+      m_isKernalRomVisible=true;
+      m_isIOVisible=false;
+      m_isCharRomVisible=true;
+    break;
+    case 11:
+      m_isBasicRomVisible=true;
+      m_isKernalRomVisible=true;
+      m_isIOVisible=false;
+      m_isCharRomVisible=true;
+    break;
+    case 12:
+      m_isBasicRomVisible=false;
+      m_isKernalRomVisible=false;
+      m_isIOVisible=false;
+      m_isCharRomVisible=false;
+    break;
+    case 13:
+      m_isBasicRomVisible=false;
+      m_isKernalRomVisible=false;
+      m_isIOVisible=true;
+      m_isCharRomVisible=false;
+    break;
+    case 14:
+      m_isBasicRomVisible=false;
+      m_isKernalRomVisible=true;
+      m_isIOVisible=true;
+      m_isCharRomVisible=false;
+    break;
+    case 15:
+      m_isBasicRomVisible=true;
+      m_isKernalRomVisible=true;
+      m_isIOVisible=true;
+      m_isCharRomVisible=false;  
     break;
   }
-  return (ret);
 }
-
-#ifdef _NEVER
-/** Part of the PLA... */
-bool RpPetra::IsIOVisible()
-{
-  static bool table[8]{false,false,false,false,false,true,true,true};
-  return(table[m_cpuAddr]);
-}
-
-/** Part of the PLA... */
-bool RpPetra::IsBasicRomVisible()
-{
-  static bool table[8]{false,false,false,true,false,false,false,true}; 
-  return(table[m_cpuAddr]);
-}
-
-/** Part of the PLA... */
-bool RpPetra::IsKernalRomVisible()
-{
-  static bool table[8]{false,false,true,true,false,false,true,true};
-  return(table[m_cpuAddr]);
-}
-
-bool RpPetra::IsCharRomVisible()
-{
-  static bool table[8]{false,true,true,true,false,false,false,false}; 
-  return(table[m_cpuAddr]);
-}
-#endif 
 
 // In this design we use Petra's CLK == 65C02 PHI2. We may later decide
 // to use some kind of interleave factor x.
-void RpPetra::Clk(bool isRisingEdge, SYSTEMSTATE *pSystemState, uint64_t totalCycles)
+void RpPetra::Clk(SYSTEMSTATE *pSystemState, uint64_t totalCycles)
 {
-  int_fast16_t addr;
-  //static char szBuffer[256];
-  // szBuffer[0]=0;
+  static uint16_t addr;
+  static uint8_t byte; 
   PHI2(LOW);
   m_pCIA1->Clk();
   m_pCIA2->Clk();
   m_pVICII->Clk();
-  pSystemState->cpuState.isRisingEdge=isRisingEdge;
   gpio_set_dir_in_masked(pioMaskData_U5_U6_U7); // set the datalines to input (seen from RP2040 side)   
   PHI2(HIGH);
   ReadCPUSignals(pSystemState);      
-  addr=pSystemState->cpuState.a0a15;
-  m_cpuAddr=m_pRAM[1] & 0x07;
-  bool handled=false;
   
-  if ((addr>=0x0000 && addr<=0x9fff) || (addr>=0xc000 && addr<=0xcfff))
+  addr=pSystemState->cpuState.a0a15;  
+  byte=pSystemState->cpuState.d0d7;  
+  
+  CalcPLA(m_pRAM[1]);
+#ifdef _ELITE
+  static uint32_t clks=0;
+  clks++;
+  if (clks==2300000)
   {
-      handled=true;
-      if (pSystemState->cpuState.readNotWrite) {   // READ access
-         WriteDataBus(m_pRAM[addr]);
-      }
-      else {
-        m_pRAM[addr]=pSystemState->cpuState.d0d7;
-      }
+    memcpy(&m_pRAM[0x0801],elite_rom,sizeof(elite_rom)); // 16384
   }
-  if (!handled)
+#endif
+#ifdef _MERCENARY
+  static uint32_t clks=0;
+  clks++;
+  if (clks==2300000)
   {
-    if (IsIOVisible())
-    {
-      if (addr>=0xd000 && addr<=0xd02e) // VICII 6569
+    memcpy(&m_pRAM[0x0801],mercenary_rom,sizeof(mercenary_rom)); // 2065
+  }
+#endif
+#ifdef _PULSAR7
+  static uint32_t clks=0;
+  clks++;
+  if (clks==2300000)
+  {
+    memcpy(&m_pRAM[0x0801],pulsar7_rom,sizeof(pulsar7_rom)); // 2065
+  }
+#endif
+
+  if (addr<0xd000 || addr>0xdfff) 
+  {
+    // No memory mapped access 
+    if (pSystemState->cpuState.readNotWrite)   // READ access
+    {  
+      if (addr>0x9fff && addr<0xc000)
       {
-        handled=true;
-        if (pSystemState->cpuState.readNotWrite) {   // READ access
-          //sprintf (szBuffer,"VIC-II read access: %04x\n",addr);
-          WriteDataBus(m_pVICII->m_registerSetRead[addr-0xd000]);
+        if (IsBasicRomVisible())
+        {
+          WriteDataBus(basic_rom[addr-0xa000]);
         }
-        else {
-          m_pVICII->WriteRegister(addr-0xd000,pSystemState->cpuState.d0d7);
+        else
+        {
+          WriteDataBus(m_pRAM[addr]);
         }
       }
-      else if (addr>=0xd400 && addr<=0xd41c) // SID6581/6582/8580
+      else if (addr>0xdfff)
       {
-        handled=true;
-#ifndef _NO_SID      
+        if (IsKernalRomVisible())
+        {
+          WriteDataBus(kernal_rom[addr-0xe000]);
+        }
+        else
+        {
+          WriteDataBus(m_pRAM[addr]);
+        }
+      }
+      else
+      {
+        WriteDataBus(m_pRAM[addr]);
+      }
+    }
+    else 
+    {
+      m_pRAM[addr]=byte;
+    }
+  }
+  else
+  {
+    // memory mapped io area
+    if (IsIOVisible()) // IO or CHARGEN or RAM?
+    {
+      // VICII 6569
+      if (addr>0xcfff && addr<0xd400) // d02e) 
+      {
         if (pSystemState->cpuState.readNotWrite) {   // READ access
-          sid_read((uint32_t)addr-0xd400, (cycle_t)totalCycles);
+          WriteDataBus(m_pVICII->m_registerSetRead[((addr-0xd000) % 64)]);
         }
         else {
-          sid_write((uint32_t)addr-0xd400,pSystemState->cpuState.d0d7);
+          m_pVICII->WriteRegister(((addr-0xd000) % 64),byte);
+        }       
+      }
+      // SID6581/6582/8580
+      else if (addr>0xd3ff && addr<0xd800) 
+      {
+#ifndef _NO_SID      
+        
+        if (pSystemState->cpuState.readNotWrite) {   // READ access
+          sid_read((uint32_t)((addr-0xd400) % 0x20), (cycle_t)totalCycles);
+        }       
+        else {
+          //static uint16_t sidActivity=0;
+          //if (sidActivity++>0 && sidActivity%100==0)  puts("§");
+          sid_write((uint32_t)((addr-0xd400) % 0x20),byte);
         }
 #endif
       } 
-      else if (addr>=0xd800 && addr<=0xdbe7) // Colorram
+      else if (addr>0xd7ff && addr<0xdc00) // Colorram
       {
-        handled=true;
         if (pSystemState->cpuState.readNotWrite) {   // READ access in colorram
           WriteDataBus(m_pColorRam[addr-0xd800]);
         }
         else // write to colorram
         {
-          WriteDataBus(m_pRAM[addr]);
-          m_pColorRam[addr-0xd800]=pSystemState->cpuState.d0d7;
+          m_pColorRam[addr-0xd800]=byte;
         }
       }
-      else if (addr>=0xdc00 && addr<=0xdcff) // CIA-1
+      else if (addr>0xdbff && addr<0xdd00) // CIA-1
       {   
-        handled=true;
         if (pSystemState->cpuState.readNotWrite) {   // READ access
-          // CIA addresses are mirrored every 16 byte until dcff.
+          // CIA addresses are mirrored every 16 byte until dcff.          
           WriteDataBus(m_pCIA1->ReadRegister((addr-0xdc00) % 16));
         }
         else {
-          m_pCIA1->WriteRegister((addr-0xdc00) % 16, pSystemState->cpuState.d0d7);
+          m_pCIA1->WriteRegister((addr-0xdc00) % 16, byte);
         }
       }
-      else if (addr>=0xdd00 && addr<=0xddff) // CIA-2
+      else if (addr>0xdcff && addr<0xde00) // CIA-2
       {
-        handled=true;
         if (pSystemState->cpuState.readNotWrite) {   // READ access
           WriteDataBus(m_pCIA2->ReadRegister((addr-0xdd00) % 16));
         }
         else {
-          m_pCIA2->WriteRegister((addr-0xdd00) % 16, pSystemState->cpuState.d0d7);
+          m_pCIA2->WriteRegister((addr-0xdd00) % 16, byte);
         }
+      }
+      else // de00-dfff io
+      {
+          puts("CP/M");
       }
     }
-    if (!handled)
+    else if (IsCharRomVisible()) 
     {
-      if (addr>=0xd000 && addr<=0xdfff && IsCharRomVisible())
+      if (pSystemState->cpuState.readNotWrite) {   // READ access
+        WriteDataBus(chargen_rom[addr-0xd000]);
+      }
+      else // write to RAM
       {
-        handled=true;
-        if (pSystemState->cpuState.readNotWrite) {   // READ access
-          WriteDataBus(chargen_rom[addr-0xd000]);
-        }
-        else
-        {
-          WriteDataBus(m_pRAM[addr]);
-        }
+        m_pRAM[addr]=byte;
       }
     }
-    if (!handled) // No IO access
+    else  // plain RAM in io area
     {
-      if (addr>=0xa000 && addr<=0xbfff)  // maybe basic ROM access or ram
+      if (pSystemState->cpuState.readNotWrite)  // READ 
       {
-        if (pSystemState->cpuState.readNotWrite)  // READ 
-        {
-          if (IsBasicRomVisible())                  
-          {
-            // Character ROM
-            WriteDataBus(basic_rom[addr-0xa000]);
-          }
-          else
-          {
-            WriteDataBus(m_pRAM[addr]);
-          }
-        }
-        else
-        {
-          m_pRAM[addr]=pSystemState->cpuState.d0d7;
-        }
+        WriteDataBus(m_pRAM[addr]);
       }
-      else if (addr>=0xd000 && addr<=0xdfff)
+      else
       {
-        if (pSystemState->cpuState.readNotWrite)  // READ 
-        {
-          WriteDataBus(m_pRAM[addr]);
-        }
-        else
-        {
-          m_pRAM[addr]=pSystemState->cpuState.d0d7;
-        }
+        m_pRAM[addr]=byte;
       }
+    }
+  }
+    /*
       else if (addr>=0xe000 && addr<=0xffff)    
       {
-        if (addr>=0xfffe) // IRQ vector
+        if (addr==0xfffe || addr==0xffff) // IRQ vector
         {
           if (pSystemState->cpuState.readNotWrite)  // READ IRQ vector
           { 
@@ -503,7 +594,7 @@ void RpPetra::Clk(bool isRisingEdge, SYSTEMSTATE *pSystemState, uint64_t totalCy
           exit(-1);
       }
     }
-  }
+  }*/
 }
 
 // Called in case of an NMI (F7) for module starts
@@ -612,31 +703,4 @@ void RpPetra::WriteDataBus(uint8_t byte)
   gpio_set_dir_out_masked(pioMaskData_U5_U6_U7); // set the datalines to output (seen from RP2040 side)
   gpio_put_masked(pioMaskData_U5_U6_U7,(uint32_t)byte);
   Enable_U7_only();
-}
-
-
-void RpPetra::UpdateScreen()
-{
-  if (m_screenUpdated)
-  {
-    m_screenUpdated=false;
-    m_pLog->Clear();
-    DumpScreen();
-  }
-}
-
-void RpPetra::DumpScreen()
-{
-  char row[41];
-  row[40]=0;
-  
-  for (int y=0; y<25; y++)
-  {
-    for (int x=0; x<40; x++)
-    {
-      row[x]=Charset[m_pRAM[0x400+((40*y)+x)]];      
-    }
-    m_pLog->LogInfo({row});
-    m_pLog->LogInfo({"\n\r"});
-  }
 }
