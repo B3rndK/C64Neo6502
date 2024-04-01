@@ -38,7 +38,6 @@ typedef enum {
 // OK #define DELAY_FACTOR_TRANSCEIVER() asm volatile("nop\nnop\nnop\nnop\n");
 #define DELAY_FACTOR_TRANSCEIVER() asm volatile("nop\nnop\nnop\nnop\n");
 
-
 typedef enum
 {
   ToCpu=0,

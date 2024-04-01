@@ -659,7 +659,7 @@ void VIC6569::HandleMulticolorBitmapMode()
 
 void VIC6569::Clk() 
 {
-  bool signalIRQ=false; 
+  static int irqAtScanline;
   m_i64Clks++;
   
   // Every 63 clocks the VIC starts a new line
@@ -685,24 +685,29 @@ void VIC6569::Clk()
       m_registerSetRead[0x12]=m_currentScanLine;
     }
     // Now check if we need to signal an IRQ due to vertical line count
-    if (m_registerSetWrite[0x1a] & 0x01)
+    
+    irqAtScanline=m_registerSetWrite[0x12]; // registerSetWrite: When shall the next IRQ occur?
+    if (m_registerSetWrite[0x11] & 0x80)
     {
-      int irqAtScanline=m_registerSetWrite[0x12]; // registerSetWrite: When shall the next IRQ occur?
-      if (m_registerSetWrite[0x11] & 0x80)
-      {
-        irqAtScanline+=256;
-      }
-      signalIRQ=irqAtScanline==m_currentScanLine;
+      irqAtScanline+=256;
     }
-    if (signalIRQ)
+
+    if (irqAtScanline==m_currentScanLine)
     {
-      // Indicate raster match to irq routine
-      m_registerSetRead[0x19]|=0x81;
-      m_pGlue->SignalIRQ(true);
-      
+      m_registerSetRead[0x19]|=0x01; /// Signal that the rasterline has been reached
+      if (m_registerSetWrite[0x1a] & 0x01)
+      {
+        static uint16_t prevLine=0;
+        m_registerSetRead[0x19]|=0x80;
+        if (prevLine!=irqAtScanline)
+        {
+          prevLine=irqAtScanline;
+        }
+        m_pGlue->SignalIRQ(true);
+      }
     }
   }
-  if (m_i64Clks % CLOCKS_PER_HLINE==62 || m_i64Clks==0) {
+  if (m_i64Clks % CLOCKS_PER_HLINE==0 || m_i64Clks==1) {
     m_borderColor[m_currentScanLine]=m_registerSetRead[0x20];
     UpdateFrameBuffer(); // Update every scanline
   }

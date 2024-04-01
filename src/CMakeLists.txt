@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.13)
+cmake_minimum_required(VERSION 3.27.4...4.0)
 
 # initialize the SDK based on PICO_SDK_PATH
 # note: this must happen before project()
@@ -12,8 +12,8 @@ set(CMAKE_CXX_STANDARD 11)
 
 #set(CMAKE_CXX_FLAGS "-Wall -Wextra")
 #set(CMAKE_CXX_FLAGS_DEBUG "-g -Og")
-set(CMAKE_CXX_FLAGS_DEBUG "-g -O0")
-set(CMAKE_CXX_FLAGS_RELEASE "-O3")
+set(CMAKE_CXX_FLAGS_DEBUG "-g -O2")
+set(CMAKE_CXX_FLAGS_RELEASE "-O2")
 
 include(FetchContent)
 
@@ -77,14 +77,15 @@ add_executable(computer
 
 # Comment in for release version 
 # _NMISTART => Start ROM using the Restore Key (F7)
-add_compile_definitions(_DEBUG _NO_SID _NO_RASTERIRQ _NO_MONITOR_CARTRIDGE _NO_SIMONS_BASIC _NO_TRAPDOOR _NO_ELITE _NO_FLASHDANCE _NO_WIZBALL _NMISTART _NO_SYNTH_SAMPLE)
+add_compile_definitions(_DEBUG _NO_SID _NO_RASTERIRQ _NO_MONITOR_CARTRIDGE _NO_SIMONS_BASIC _NO_TRAPDOOR _NO_ELITE _NO_PULSAR7 _NO_MERCENARY _NO_FLASHDANCE _NO_WIZBALL _NO_NMISTART _NO_SYNTH_SAMPLE)
 
 # Add pico_stdlib library which aggregates commonly used features
 target_link_libraries(computer pico_stdlib hardware_adc hardware_dma hardware_pio pico_time pico_multicore libdvi tinyusb_host tinyusb_board tinyusb_device)
 
 # enable usb output, disable uart output
+pico_enable_stdio_semihosting(computer 1)
 pico_enable_stdio_usb(computer 0)
-pico_enable_stdio_uart(computer 1)
+pico_enable_stdio_uart(computer 0)
 
 
 # create map/bin/hex/uf2 file in addition to ELF.
