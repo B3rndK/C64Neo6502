@@ -29,6 +29,12 @@
 #ifdef _PULSAR7
 #include "roms/pulsar7.hxx"
 #endif
+#ifdef _FAIRLIGHT
+#include "roms/fairlight.hxx"
+#endif
+#ifdef _NIGHTSHADE
+#include "roms/nightshade.hxx"
+#endif
 #ifdef _SYNTH_SAMPLE
 #include "roms/synth_sample.hxx"
 #endif

@@ -28,7 +28,7 @@ void CIA6526::SignalInterrupt(bool signal)
   m_pGlue->SignalIRQ(signal);
 }
 
-void CIA6526::handleTimerA()
+void __not_in_flash_func (CIA6526::handleTimerA)()
 {
   // Interrupt Timer A allowed, decrease counter
   uint16_t timer=m_registerSet[0x05]*256+m_registerSet[0x04];
@@ -66,7 +66,7 @@ void CIA6526::handleTimerA()
   }
 }
 
-void CIA6526::handleTimerB()
+void __not_in_flash_func (CIA6526::handleTimerB)()
 {
   // Interrupt Timer B allowed, decrease counter
   uint16_t timer=m_registerSet[0x07]*256+m_registerSet[0x06];
@@ -93,7 +93,7 @@ void CIA6526::handleTimerB()
   }
 }
 
-void CIA6526::Clk() 
+void __not_in_flash_func (CIA6526::Clk)() 
 {
   m_i64Clks++;
   
@@ -118,7 +118,7 @@ uint8_t CIA6526::ReadRegister(uint8_t reg)
   return ret;
 }
 
-void CIA6526::WriteRegister(uint8_t reg, uint8_t value)
+void __not_in_flash_func (CIA6526::WriteRegister)(uint8_t reg, uint8_t value)
 {
   switch (reg)
   {
