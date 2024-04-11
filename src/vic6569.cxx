@@ -24,7 +24,7 @@ void VIC6569::Reset()
   m_currentScanLine=0;
 }
 
-void VIC6569::UpdateFrameBuffer()
+void __not_in_flash_func (VIC6569::UpdateFrameBuffer)()
 {
   uint8_t value=m_registerSetRead[0x11];
   
@@ -55,7 +55,7 @@ void VIC6569::UpdateFrameBuffer()
  * ECM with only 64 characters
  * 
 */
-void VIC6569::HandleExtendedColorMode()
+void __not_in_flash_func (VIC6569::HandleExtendedColorMode)()
 {
     uint8_t backgroundColors[4];
     
@@ -167,7 +167,7 @@ void VIC6569::HandleExtendedColorMode()
 }
 
 
-void VIC6569::HandleMulticolorTextMode()
+void __not_in_flash_func (VIC6569::HandleMulticolorTextMode)()
 {
     uint8_t *pCurrentLine=m_pFrameBuffer+((m_currentScanLine-(END_SCANLINE_UPPER_BORDER_PAL+1))*160);
     uint16_t curRow=(m_currentScanLine-(END_SCANLINE_UPPER_BORDER_PAL+1))/8;
@@ -307,7 +307,7 @@ void VIC6569::HandleMulticolorTextMode()
   } 
 }
 
-void VIC6569::HandleStandardTextMode()
+void __not_in_flash_func (VIC6569::HandleStandardTextMode)()
 {
     uint8_t *pCurrentLine=m_pFrameBuffer+((m_currentScanLine-(END_SCANLINE_UPPER_BORDER_PAL+1))*160);
     uint16_t curRow=(m_currentScanLine-(END_SCANLINE_UPPER_BORDER_PAL+1))/8;
@@ -409,7 +409,7 @@ void VIC6569::HandleStandardTextMode()
   } 
 }
 
-void VIC6569::HandleTextMode(bool multicolor)
+void __not_in_flash_func (VIC6569::HandleTextMode)(bool multicolor)
 {
     if (multicolor)
     {
@@ -423,7 +423,7 @@ void VIC6569::HandleTextMode(bool multicolor)
 
 
 /* CIA-B $DD00 bits 0..1 define the four possible 16k banks */
-uint16_t VIC6569::GetVideoRamStartAddr(bool bitmapMode)
+uint16_t __not_in_flash_func (VIC6569::GetVideoRamStartAddr)(bool bitmapMode)
 {
   static uint16_t addrTab[4]={0xc000,0x8000,0x4000,0x0000};
   uint16_t addr=addrTab[m_pGlue->m_pCIA2->ReadRegister(0) & 0b00000011];
@@ -444,7 +444,7 @@ uint16_t videoRamStartAddr=0;
 /** Where to find the charset character definition.
  *  $d018- bits 1-3 (text mode)
  */
-uint16_t VIC6569::GetTextModeCharRamAddrOffset()
+uint16_t __not_in_flash_func  (VIC6569::GetTextModeCharRamAddrOffset)()
 {
   static uint16_t table[8]={0x0000,0x0800,0x1000,0x1800,0x2000,0x2800,0x3000,0x3800};
   return table[(m_registerSetRead[0x18]>>1) & 0x07];
@@ -453,13 +453,13 @@ uint16_t VIC6569::GetTextModeCharRamAddrOffset()
 /**
  *  Video RAM (Text) bits 4..7 of 0xd018
 */
-uint16_t VIC6569::GetVideoRamAddrOffset()
+uint16_t __not_in_flash_func (VIC6569::GetVideoRamAddrOffset)()
 {
   static uint16_t table[16]={0x0000,0x0400,0x0800,0x0c00,0x1000,0x1400,0x1800,0x1c00,0x2000,0x2400,0x2800,0x2c00,0x3000,0x3400,0x3800,0x3c00};
   return table[(m_registerSetRead[0x18]>>4) & 0b00001111];
 }
 
-void VIC6569::HandleHiresModes(bool multicolor)
+void __not_in_flash_func (VIC6569::HandleHiresModes)(bool multicolor)
 {
   if (multicolor)
   {
@@ -474,7 +474,7 @@ void VIC6569::HandleHiresModes(bool multicolor)
 /**
  * Standard Bitmap mode is 320x200/16
 */
-void VIC6569::HandleStandardBitmapMode()
+void __not_in_flash_func (VIC6569::HandleStandardBitmapMode)()
 {
     uint8_t scanLine=m_currentScanLine-(END_SCANLINE_UPPER_BORDER_PAL+1);
     uint8_t *pCurrentLine=m_pFrameBuffer+((scanLine)*160);
@@ -587,7 +587,7 @@ void VIC6569::HandleStandardBitmapMode()
 /**
 *   Multicolor Bitmap Mode is 160x200/16
 */
-void VIC6569::HandleMulticolorBitmapMode()
+void __not_in_flash_func (VIC6569::HandleMulticolorBitmapMode)()
 {
     uint8_t scanLine=m_currentScanLine-(END_SCANLINE_UPPER_BORDER_PAL+1);
     uint8_t *pCurrentLine=m_pFrameBuffer+((scanLine)*160);
@@ -657,11 +657,11 @@ void VIC6569::HandleMulticolorBitmapMode()
 }
 
 
-void VIC6569::Clk() 
+void __not_in_flash_func (VIC6569::Clk) () 
 {
   static int irqAtScanline;
   m_i64Clks++;
-  
+
   // Every 63 clocks the VIC starts a new line
   
   if (m_i64Clks % CLOCKS_PER_HLINE==0)

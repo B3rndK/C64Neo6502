@@ -50,12 +50,12 @@ Computer::~Computer()
 {
 }
 
-int Computer::Run()
+int __not_in_flash_func (Computer::Run)()
 {
   Init();
   tuh_task();
   do {
-    if (m_totalCyles%21000==0)
+    if (m_totalCyles%20000==0)
     {
         tuh_task();
     }

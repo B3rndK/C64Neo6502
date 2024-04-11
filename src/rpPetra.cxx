@@ -176,7 +176,7 @@ void RpPetra::Reset()
   m_pCIA2->Reset();  
   m_pVideoOut->Reset();
   ResetCPU();
-#ifndef _NO_SID  
+#ifdef _SID  
   SIDReset(0);
   ::SNDInitialise();
 #endif
@@ -255,7 +255,7 @@ void RpPetra::ClockCPU(int counter)
  * 
 */
 
-void RpPetra::CalcPLA(uint8_t cpuPort)
+void __not_in_flash_func (RpPetra::CalcPLA)(uint8_t cpuPort)
 {
   switch (cpuPort & 0x07)
   {
@@ -361,44 +361,51 @@ void RpPetra::CalcPLA(uint8_t cpuPort)
 
 // In this design we use Petra's CLK == 65C02 PHI2. We may later decide
 // to use some kind of interleave factor x.
-void RpPetra::Clk(SYSTEMSTATE *pSystemState, uint64_t totalCycles)
+void __not_in_flash_func (RpPetra::Clk)(SYSTEMSTATE *pSystemState, uint64_t totalCycles)
 {
   static uint16_t addr;
   static uint8_t byte; 
+  
   PHI2(LOW);
-  m_pCIA1->Clk();
-  m_pCIA2->Clk();
   m_pVICII->Clk();
   gpio_set_dir_in_masked(pioMaskData_U5_U6_U7); // set the datalines to input (seen from RP2040 side)   
   PHI2(HIGH);
+  m_pCIA1->Clk();
+  m_pCIA2->Clk();
   ReadCPUSignals(pSystemState);      
-  
+ 
   addr=pSystemState->cpuState.a0a15;  
   byte=pSystemState->cpuState.d0d7;  
   
   CalcPLA(m_pRAM[1]);
 #ifdef _ELITE
-  static uint32_t clks=0;
-  clks++;
-  if (clks==2300000)
+  if (totalCycles==2300000)
   {
     memcpy(&m_pRAM[0x0801],elite_rom,sizeof(elite_rom)); // 16384
   }
 #endif
 #ifdef _MERCENARY
-  static uint32_t clks=0;
-  clks++;
-  if (clks==2300000)
+  if (totalCycles==2300000)
   {
     memcpy(&m_pRAM[0x0801],mercenary_rom,sizeof(mercenary_rom)); // 2065
   }
 #endif
 #ifdef _PULSAR7
-  static uint32_t clks=0;
-  clks++;
-  if (clks==2300000)
+  if (totalCycles==2300000)
   {
     memcpy(&m_pRAM[0x0801],pulsar7_rom,sizeof(pulsar7_rom)); // 2065
+  }
+#endif
+#ifdef _FAIRLIGHT
+  if (totalCycles==2300000)
+  {
+    memcpy(&m_pRAM[0x0801],fairlight_rom,sizeof(fairlight_rom)); // 2066
+  }
+#endif
+#ifdef _NIGHTSHADE
+  if (totalCycles==2300000)
+  {
+    memcpy(&m_pRAM[0x0801],nightshade_rom,sizeof(nightshade_rom)); // 2080
   }
 #endif
 
@@ -498,9 +505,14 @@ void RpPetra::Clk(SYSTEMSTATE *pSystemState, uint64_t totalCycles)
           m_pCIA2->WriteRegister((addr-0xdd00) % 16, byte);
         }
       }
-      else // de00-dfff io
+      else // de00-dfff io, should normally be not accessible...
       {
-          puts("CP/M");
+        if (pSystemState->cpuState.readNotWrite) {   // READ access
+          WriteDataBus(m_pRAM[addr]);
+        }
+        else {
+          m_pRAM[addr]=byte;
+        }
       }
     }
     else if (IsCharRomVisible()) 
@@ -525,76 +537,6 @@ void RpPetra::Clk(SYSTEMSTATE *pSystemState, uint64_t totalCycles)
       }
     }
   }
-    /*
-      else if (addr>=0xe000 && addr<=0xffff)    
-      {
-        if (addr==0xfffe || addr==0xffff) // IRQ vector
-        {
-          if (pSystemState->cpuState.readNotWrite)  // READ IRQ vector
-          { 
-            if (IsKernalRomVisible())                  
-            {
-              WriteDataBus(kernal_rom[addr-0xe000]);
-            }
-            else
-            {
-              WriteDataBus(m_pRAM[addr]);
-            }
-          }
-          else
-          {
-            m_pRAM[addr]=pSystemState->cpuState.d0d7;
-          }
-        }
-        else if (addr==0xfffa || addr==0xfffb)  // NMI vector  
-        {
-#ifdef _NMISTART
-          if (!HandleModuleStart(addr, pSystemState->cpuState.readNotWrite))
-#endif
-          {
-
-            if (pSystemState->cpuState.readNotWrite)  // READ NMI vector
-            {
-              if (IsKernalRomVisible())                  
-              {
-                WriteDataBus(kernal_rom[addr-0xe000]);
-              }
-              else
-              {
-                WriteDataBus(m_pRAM[addr]);
-              }
-            }
-            else
-            {
-              m_pRAM[addr]=pSystemState->cpuState.d0d7;
-            }
-          }
-        }
-        else
-        {
-          if (pSystemState->cpuState.readNotWrite)  
-          {
-            if (IsKernalRomVisible())                  
-            {
-              WriteDataBus(kernal_rom[addr-0xe000]);
-            }
-            else
-            {
-              WriteDataBus(m_pRAM[addr]);
-            }
-          }
-          else
-          {
-            m_pRAM[addr]=pSystemState->cpuState.d0d7;
-          }
-        }
-      }
-      else // everything else
-      {
-          exit(-1);
-      }
-    }
-  }*/
 }
 
 // Called in case of an NMI (F7) for module starts
@@ -677,7 +619,7 @@ bool RpPetra::HandleModuleStart(uint16_t addr, bool isRead)
  return ret;
 }
 
-void RpPetra::ReadCPUSignals(SYSTEMSTATE *pSystemState)
+void __not_in_flash_func (RpPetra::ReadCPUSignals)(SYSTEMSTATE *pSystemState)
 {
    // read A0-7
   Enable_U5_only();
@@ -698,7 +640,7 @@ void RpPetra::ReadCPUSignals(SYSTEMSTATE *pSystemState)
   } 
 }
 
-void RpPetra::WriteDataBus(uint8_t byte)
+void __not_in_flash_func (RpPetra::WriteDataBus)(uint8_t byte)
 {
   gpio_set_dir_out_masked(pioMaskData_U5_U6_U7); // set the datalines to output (seen from RP2040 side)
   gpio_put_masked(pioMaskData_U5_U6_U7,(uint32_t)byte);
