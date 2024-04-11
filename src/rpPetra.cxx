@@ -409,6 +409,39 @@ void __not_in_flash_func (RpPetra::Clk)(SYSTEMSTATE *pSystemState, uint64_t tota
   }
 #endif
 
+#ifdef _LOM
+  if (totalCycles==2300000)
+  {
+    memcpy(&m_pRAM[0x0801],lom_rom,sizeof(lom_rom)); 
+  }
+#endif
+
+#ifdef _LOMII
+  if (totalCycles==2300000)
+  {
+    memcpy(&m_pRAM[0x0801],lomii_rom,sizeof(lomii_rom)); 
+  }
+#endif
+
+#ifdef _HOBBIT
+  if (totalCycles==2300000)
+  {
+    memcpy(&m_pRAM[0x0801],hobbit_rom,sizeof(hobbit_rom)); 
+  }
+#endif
+#ifdef _CMASTER
+  if (totalCycles==2300000)
+  {
+    memcpy(&m_pRAM[0x0801],cmaster_rom,sizeof(cmaster_rom)); 
+  }
+#endif
+#ifdef _COLOSSUS
+  if (totalCycles==2300000)
+  {
+    memcpy(&m_pRAM[0x0801],colossus_rom,sizeof(colossus_rom)); 
+  }
+#endif
+
   if (addr<0xd000 || addr>0xdfff) 
   {
     // No memory mapped access 
