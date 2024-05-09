@@ -186,7 +186,7 @@ void RpPetra::Reset()
 // the interrupt request source.
 void RpPetra::SignalIRQ(bool enable)
 {
-  static u_int16_t activity=0;
+  static uint16_t activity=0;
   if (enable && ++activity%1000==0) puts("*");
 
   if (enable) gpio_put(IRQ, LOW); // IRQ is low active so reset is active now
@@ -197,7 +197,7 @@ void RpPetra::SignalIRQ(bool enable)
 // current instruction is completed
 void RpPetra::SignalNMI(bool enable)
 {
-  static u_int16_t activity=0;
+  static uint16_t activity=0;
   if (enable && ++activity%1000==0) puts("#");
 
   if (enable) gpio_put(NMI, LOW); // IRQ is low active so reset is active now
