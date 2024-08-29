@@ -1,16 +1,16 @@
 /**
- * Install CMake and GCC cross compiler
- * sudo apt install cmake gcc-arm-none-eabi libnewlib-arm-none-eabi libstdc++-arm-none-eabi-newlib
- * Create and switch to a build subdirectory, type "cmake .."
- * followed by "./make"
- * Debugging using OpenOCD: You must compile the https://github.com/raspberrypi/openocd 
- * yourself and need to install additional libraries (hidusb etc) before. OpenOCD 0.12.0 
- * installed as a package will not work with the Neo6502. 
- * ./bootstrap
- * ./configure --enable-cmsis-dap
- * ./make
- * ./make install
- * sudo apt install gdb-multiarch
+ * Clone the pico-sdk first and set the PICO_SDK_PATH environment variable (.bashrc).
+ * Create and change to the C64Neo6502 build subdirectory. Type "cmake ../", then "make".
+ * Debugging using OpenOCD: You must compile the https://github.com/raspberrypi/openocd due to the
+ * fact that the Neo6502 is using a flash memory the standard openocd package 12.0 currently does
+ * not support. Check the OpenOCD git page how to compile. Important: 
+ * when configuring, please use "./configure --enable-cmsis-dap-v2 --enable-cmsis-dap --enable-openjtag"
+ * Note: You may be asked install additional libraries before. Do not forget to run "sudo make --install".
+ *    ./bootstrap
+ *    . /configure --enable-cmsis-dap --enable-cmsis-dap-v2 --enable-openjtag
+ *    ./make
+ *    ./make install
+ * Install GNU-Debugger multi-architecture: sudo apt install gdb-multiarch
  * Install VS Code CMake/Tools/C++ extensions and Cortex-Debug
  * Run and Debug: Select "Cortex Debug" 
  * Type 'make' from the build directory.
@@ -55,7 +55,6 @@ int main() {
   Logging *pLog=new Logging(new AnsiTerminal(), All);
   pLog->Clear();
   pLog->LogTitle({"*** Welcome to the wonderful world of 8-bit MOS technology ***\n"});
-
   Computer *pComputer = new Computer(pLog);
   int ret=pComputer->Run();
   // Dead end...

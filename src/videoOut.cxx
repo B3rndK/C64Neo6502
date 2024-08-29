@@ -23,7 +23,7 @@ const struct dvi_timing dvi_timing_340x240p_60hz = {
 	.v_sync_width      = 2,
 	.v_back_porch      = 33, 
 	.v_active_lines    = 480,
-	.bit_clk_khz       = 256000 
+	.bit_clk_khz       = 252000 
 };
 
 static const struct dvi_serialiser_cfg picodvi_cfg = {
@@ -216,7 +216,7 @@ void VideoOut::Reset()
   // For those displays where the upper mode does not work
   //g_pDVI->timing=&dvi_timing_640x480p_60hz;
   g_pDVI->ser_cfg = picodvi_cfg;
-  vreg_set_voltage(VREG_VOLTAGE_1_10);                    				
+  // vreg_set_voltage(VREG_VOLTAGE_1_30);                    				
   set_sys_clock_khz(g_pDVI->timing->bit_clk_khz, true); 
   dvi_init(g_pDVI,next_striped_spin_lock_num(), next_striped_spin_lock_num());
   Start();
