@@ -1,9 +1,10 @@
-cmake_minimum_required(VERSION 3.27.4...4.0)
+cmake_minimum_required(VERSION 3.13)
 
 # initialize the SDK based on PICO_SDK_PATH
 # note: this must happen before project()
 set(PICO_SDK_FETCH_FROM_GIT on)
 set(PICO_BOARD pico)
+set(picotool_DIR ~/git/picotool/build/picotool)
 include(pico_sdk_import.cmake)
 
 project(my_project C CXX ASM)
@@ -39,7 +40,7 @@ set(DVI_DEFAULT_SERIAL_CONFIG "pico_sock_cfg" CACHE STRING
 FetchContent_Declare(
     PicoDVI
     GIT_REPOSITORY https://github.com/Wren6991/PicoDVI
-    GIT_TAG        a248d72b8cc95a08b43ef4307cd954eb801272b2 # just the latest on 11/12/2023
+    #GIT_TAG        a248d72b8cc95a08b43ef4307cd954eb801272b2 # just the latest on 11/12/2023
 )
 FetchContent_MakeAvailable(PicoDVI)
 
