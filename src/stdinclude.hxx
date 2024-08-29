@@ -11,6 +11,7 @@
 #include <hardware/vreg.h>
 #include <hardware/structs/bus_ctrl.h>
 #include <hardware/pwm.h>
+#include <hardware/clocks.h>
 #include <pico/stdlib.h>
 #include <pico/multicore.h>
 #include <pico/time.h>
