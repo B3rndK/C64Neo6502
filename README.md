@@ -76,8 +76,8 @@ This is work in progress and is set up for fun.
 ## How can I add my own games and start them?
 I created my own small, rising collection of games by doing the following:
 
-* After start of the C64Neo6502 (counting the cycles) I copy a little basic program bringing up my basic program showing selection of roms by copying it to $0801. I saved the basic program upfront and imported it like a rom file.
-* In case the user entered the ROM to start, in Basic I "poke" this selection into an unused IO memory cell which I catch in the C64Neo6502. I took a non-usable VICII address.
+* After start of the C64Neo6502 (counting the cycles) I import a little basic program showing selection of roms by copying it to $0801. Then the user has to type "run" to start it. I saved this basic program upfront and imported it like a rom file.
+* In case the user entered desired ROM letter to start, in Basic I "poke" this selection into an unused IO memory cell which I catch in the C64Neo6502. I took a non-usable VICII address.
 * In the EMU code, I see that this address is accessed for write and I then copy the appropriate ROM to it's start address via memcpy, e.g. $0801. I also copy a little handwritten piece of  machine code to the cassette buffer and execute. This little piece of machine code will put the start address of the rom onto the stack and will do a return from interrupt. I then raise an NMI (non-maskable interrupt). This is why you definitely need the extra cabling mentioned above.
 ** Example: This is the loader code which will start a ROM at $0812:<BR><code>static uint8_t timem_nmi_loader[]={0x68,0x68,0x68,0xa9,0x08,0x48,0xa9,0x12,0x48,0x08,0x40};  // $0812</code>
 * In case the 6502's $FFFA, $FFFB address is requested for READ on the address bus, I return the vector to the little machine code routine which will then RTI directly to the start of the ROM. 
@@ -87,8 +87,8 @@ That's it! And here is how it looks like:
 
 
 
-
 ## How does it look?
+<BR>
 * This is how it currently looks like using my collection:
 
 https://github.com/user-attachments/assets/17fc6d6b-4e75-4d23-bd12-faf635cf7a50
